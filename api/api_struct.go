@@ -15,3 +15,9 @@ type AppStatusStruct struct {
 	UPDATE_DATE string`json:"updated_date"`
 	UPDATE_BY string `json:"updated_by"`
 }
+
+// All app struct
+type AllApp struct {
+	Name string
+	App []AppStatusStruct
+}

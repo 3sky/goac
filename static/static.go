@@ -2,11 +2,10 @@ package static
 
 import (
 	"p2go/db"
-	//"p2go/api"
 	"html/template"
 	"net/http"
-	// "fmt"
-	// "time"
+	"os"
+	"strings"
 )
 
 
@@ -22,14 +21,10 @@ func (pg *PageData) AddItem(item db.StatusStruct) []db.StatusStruct{
 }
 
 func DisplayHtml(w http.ResponseWriter, r *http.Request) {
-    // funcMap := template.FuncMap{
-    //     "FormatDate": func(value time.Time) string {
-    //         return fmt.Sprintf("%.s", value.Format("2006-01-02 15:04:05"))
-    //     },
-	// }
 	
 	var tmp db.StatusStruct
-
+	var pwd string 
+	
 	AppData := []db.StatusStruct{}
 
 	data := PageData{
@@ -43,26 +38,15 @@ func DisplayHtml(w http.ResponseWriter, r *http.Request) {
 		data.AddItem(tmp)
 	}
 
+	p, err := os.Getwd()
+	db.CheckErr(err)
 
-	tmpl := template.Must(template.ParseFiles("./static/hello.html"))
+	if strings.Contains(p, "static") {
+		pwd = p + "/hello.html"
+	} else {
+		pwd = p + "/static/hello.html"
+	}
+
+	tmpl := template.Must(template.ParseFiles(pwd))
 	tmpl.Execute(w, data)
 }
-
-
-
-
-
-// func main() {
-
-// 	as1:= AS{APP_NAME: "Test 1", APP_VERSION: "1", UPDATE_BY: "1"}
-// 	as2:= AS{APP_NAME: "Test 2", APP_VERSION: "2", UPDATE_BY: "2"}
- 
-// 	PagesData :=[]api.AppStatusStruct{}
-	
-// 	pages := PageData{PageTitle:"Test", Oneapp: PagesData} 
-
-// 	pages.AddItem(as1)
-// 	pages.AddItem(as2)
-
-// 	fmt.Println(pages)
-// }

@@ -100,6 +100,7 @@ func UpdateData(w http.ResponseWriter, r *http.Request) {
 }
 
 
+// Delete data (DELETE)
 func DeleteData(w http.ResponseWriter, r *http.Request) {
 	
 	var app AppStatusStruct
@@ -120,20 +121,34 @@ func DeleteData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
+// Display all app (GET)
 func DisplayAllApp(w http.ResponseWriter, r *http.Request) {
 	
-	var app interface{};
+	var app *AppStatusStruct
+
+	Apps := []AppStatusStruct{}
+
+	data := AllApp{
+		Name: "Apps",
+		App: Apps,
+	}
+
 	all_ids := db.GetAllID()
 	for _, k := range all_ids {
 		tmp := db.SelectFromDBWhereID(int64(k))
 		app = GetAppStatusStructFromStatusStruct(&tmp)
-		json.NewEncoder(w).Encode(app)
+		data.AddApp(app)
 	}
-	
+	json.NewEncoder(w).Encode(data)
 }
 
+func (aa *AllApp) AddApp(app *AppStatusStruct) []AppStatusStruct{
+	valueOffApp := *app
+	aa.App = append(aa.App, valueOffApp)
+	return aa.App
+}
 
+// Convert StatusStruct to AppStruct
 func GetAppStatusStructFromStatusStruct(s *db.StatusStruct) *AppStatusStruct {
 	s2 := &AppStatusStruct{
 		ID: s.Model.ID,

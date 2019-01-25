@@ -174,13 +174,85 @@ func TestAddNewApp(t *testing.T) {
 	assert.Equal(t, "Application name and version are mandatory ! ", h.SAY)
 
 	
+}
+
+func TestDisplayAllApp(t *testing.T) {
+
+	var allApp AllApp
+	var app1, app2, app3, app4 AppStatusStruct
+
+	req := httptest.NewRequest("GET", "http://127.0.0.1:5000/api/apps", nil)
+	w := httptest.NewRecorder()
+
+	DisplayAllApp(w, req)
+
+	resp := w.Result()
+	
+	
+	_ = json.NewDecoder(resp.Body).Decode(&allApp)
+	
+	app1 = allApp.App[0]
+	app2 = allApp.App[1]
+	app3 = allApp.App[2]
+	app4 = allApp.App[3]
+
+	
+	assert.Equal(t, 1,                int(app1.ID))
+	assert.Equal(t, "Test_run_app_1", app1.APP_NAME)
+	assert.Equal(t, "1",              app1.APP_VERSION)
+	assert.Equal(t, "UnitTest_1",     app1.UPDATE_BY)
+
+	assert.Equal(t, 2,                int(app2.ID))
+	assert.Equal(t, "Test_run_app_2", app2.APP_NAME)
+	assert.Equal(t, "2",              app2.APP_VERSION)
+	assert.Equal(t, "UnitTest_2",     app2.UPDATE_BY)
+
+	assert.Equal(t, 3,         int(app3.ID))
+	assert.Equal(t, "New_app", app3.APP_NAME)
+	assert.Equal(t, "1.01",    app3.APP_VERSION)
+	assert.Equal(t, "test1",   app3.UPDATE_BY)
+ 
+	assert.Equal(t, 4,            int(app4.ID))
+	assert.Equal(t, "New_app_2",  app4.APP_NAME)
+	assert.Equal(t, "11.1",       app4.APP_VERSION)
+	assert.Equal(t, "random guy", app4.UPDATE_BY)
+
 	err := os.Remove("./SimpleDB.db")
 	db.CheckErr(err)
-	
+
 }
 
 
-/** at this moment test doesn't work
+/** at this moment test doesn't work PUT Method test
+func TestDeleteData(t *testing.T) {
+
+	
+	var h1 HelloStruct
+
+	r := mux.NewRouter()
+	r.HandleFunc("/api/app/{id}", DisplaAppByID).Methods("DELETE")
+	
+    ts := httptest.NewServer(r)
+    defer ts.Close()
+
+	req, err := http.NewRequest("DELETE", "1", nil)
+	w := httptest.NewRecorder()
+
+	DeleteData(w, req)
+
+	resp := w.Result()
+	
+	
+	_ = json.NewDecoder(resp.Body).Decode(&h1)
+
+
+	fmt.Println(h1)
+
+}
+**/
+
+
+/** at this moment test doesn't work PUT Method test
 func TestUpdateData(t * testing.T) {
 
 	//var st1web, st1db db.StatusStruct
