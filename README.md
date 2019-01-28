@@ -2,7 +2,32 @@
 
 First try to convert https://github.com/3sky/sample-python-api into golang
 
-## Base command usage
+App contains basic http auth with `3sky:test` hardcoded in app.go, feel free to change it :) 
+
+## Install
+
+- Fetach deps
+
+  ```bash
+  go get ./...
+  ```
+
+- Build app
+
+  ```bash
+  go build -o someApp app.go
+  ```
+
+- Ship it !
+
+  ```bash
+  chmod +x
+  ./someApp > someApp.log &
+  ```
+
+### Base command usage
+
+- Almost everywhere `-u user:password` is mandatory
 
 - Get one app
 
@@ -34,8 +59,9 @@ First try to convert https://github.com/3sky/sample-python-api into golang
   curl -s -X DELETE http://127.0.0.1:5000/api/app/2 | jq .
   ```
 
-- Get HTML table
+- Get HTML table(this endpoint is public)
 
   ```commandline
   curl -s http://127.0.0.1:5000/
   ```
+
