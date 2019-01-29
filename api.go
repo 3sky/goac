@@ -1,13 +1,38 @@
-package api
+package main
 
 import (
-	"p2go/db"
+	
 	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	//"github.com/jinzhu/gorm"
 )
+
+
+//HelloStruct for valid JSON
+type HelloStruct struct {
+	ID  int    `json:"ID,omitempty"`
+	SAY string `json:"INFO,omitempty"`
+}
+
+// Similar struct to db.StatusStruct, but without model
+type AppStatusStruct struct {
+	ID uint 
+	APP_NAME string `json:"app_name"` 
+	APP_VERSION string `json:"app_version"`
+	UPDATE_DATE string`json:"updated_date"`
+	UPDATE_BY string `json:"updated_by"`
+}
+
+// All app struct
+type AllApp struct {
+	Name string
+	App []AppStatusStruct
+}
+
+
 
 //SayHello seyhello
 func SayHello(w http.ResponseWriter, r *http.Request) {
@@ -16,16 +41,16 @@ func SayHello(w http.ResponseWriter, r *http.Request) {
 }
 
 // Display App status By ID (GET)
-func DisplaAppByID(w http.ResponseWriter, r *http.Request) {
+func (a *App) DisplaAppByID(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id := vars["id"]
 	i, _ := strconv.Atoi(id)
-	all_ids := db.GetAllID()
+	all_ids := a.GetAllID()
 
-	if IfContains(all_ids, i) {
+	if Ifcontains(all_ids, i) {
 		var app interface{};
-		tmp := db.SelectFromDBWhereID(int64(i))
+		tmp := a.SelectFromDBWhereID(int64(i))
 		app = GetAppStatusStructFromStatusStruct(&tmp)
 		json.NewEncoder(w).Encode(app)
 	} else {
@@ -36,7 +61,7 @@ func DisplaAppByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // Add New App (POST)
-func AddNewApp(w http.ResponseWriter, r *http.Request) {
+func (a *App) AddNewApp(w http.ResponseWriter, r *http.Request) {
 
 	var app AppStatusStruct
 	var updater string
@@ -52,7 +77,7 @@ func AddNewApp(w http.ResponseWriter, r *http.Request) {
 			updater = app.UPDATE_BY
 		}
 
-		db.InsertToDB(app.APP_NAME, app.APP_VERSION, updater)
+		a.InsertToDB(app.APP_NAME, app.APP_VERSION, updater)
 
 	} else {
 		h := &HelloStruct{SAY: "Application name and version are mandatory ! "}
@@ -61,32 +86,32 @@ func AddNewApp(w http.ResponseWriter, r *http.Request) {
 }
 
 // Update Data (PUT)
-func UpdateData(w http.ResponseWriter, r *http.Request) {
+func (a *App) UpdateData(w http.ResponseWriter, r *http.Request) {
 
 	var app AppStatusStruct
 
 	vars := mux.Vars(r)
 	id := vars["id"]
 	i, _ := strconv.Atoi(id)
-	all_ids := db.GetAllID()
+	all_ids := a.GetAllID()
 
-	if IfContains(all_ids, i) {
+	if Ifcontains(all_ids, i) {
 		_ = json.NewDecoder(r.Body).Decode(&app)
 		
 		if len(app.APP_NAME) > 0 {
-			db.UpdateSelectedColumn(int64(i), "app_name", app.APP_NAME)
+			a.UpdateSelectedColumn(int64(i), "app_name", app.APP_NAME)
 		}
 		
 		if len(app.UPDATE_BY) > 0 {
-			db.UpdateSelectedColumn(int64(i), "updated_by", app.UPDATE_BY)
+			a.UpdateSelectedColumn(int64(i), "updated_by", app.UPDATE_BY)
 		} 
 
 		if len(app.APP_VERSION) > 0 {
-			db.UpdateSelectedColumn(int64(i), "app_version", app.APP_VERSION)
+			a.UpdateSelectedColumn(int64(i), "app_version", app.APP_VERSION)
 		} 
 		
 		var app_after_update interface{};
-		tmp := db.SelectFromDBWhereID(int64(i))
+		tmp := a.SelectFromDBWhereID(int64(i))
 		app_after_update = GetAppStatusStructFromStatusStruct(&tmp)
 		json.NewEncoder(w).Encode(app_after_update)
 
@@ -101,18 +126,18 @@ func UpdateData(w http.ResponseWriter, r *http.Request) {
 
 
 // Delete data (DELETE)
-func DeleteData(w http.ResponseWriter, r *http.Request) {
+func (a *App) DeleteData(w http.ResponseWriter, r *http.Request) {
 	
 	var app AppStatusStruct
 
 	vars := mux.Vars(r)
 	id := vars["id"]
 	i, _ := strconv.Atoi(id)
-	all_ids := db.GetAllID()
+	all_ids := a.GetAllID()
 
-	if IfContains(all_ids, i) {
+	if Ifcontains(all_ids, i) {
 		_ = json.NewDecoder(r.Body).Decode(&app)
-		db.DeleteRowByID(int64(i))
+		a.DeleteRowByID(int64(i))
 		h := &HelloStruct{ID: i, SAY: "Record was deleted successfully !"}
 		json.NewEncoder(w).Encode(h)
 	} else {
@@ -122,7 +147,7 @@ func DeleteData(w http.ResponseWriter, r *http.Request) {
 }
 
 // Display all app (GET)
-func DisplayAllApp(w http.ResponseWriter, r *http.Request) {
+func (a *App) DisplayAllApp(w http.ResponseWriter, r *http.Request) {
 	
 	var app *AppStatusStruct
 
@@ -133,9 +158,9 @@ func DisplayAllApp(w http.ResponseWriter, r *http.Request) {
 		App: Apps,
 	}
 
-	all_ids := db.GetAllID()
+	all_ids := a.GetAllID()
 	for _, k := range all_ids {
-		tmp := db.SelectFromDBWhereID(int64(k))
+		tmp := a.SelectFromDBWhereID(int64(k))
 		app = GetAppStatusStructFromStatusStruct(&tmp)
 		data.AddApp(app)
 	}
@@ -149,7 +174,7 @@ func (aa *AllApp) AddApp(app *AppStatusStruct) []AppStatusStruct{
 }
 
 // Convert StatusStruct to AppStruct
-func GetAppStatusStructFromStatusStruct(s *db.StatusStruct) *AppStatusStruct {
+func GetAppStatusStructFromStatusStruct(s *StatusStruct) *AppStatusStruct {
 	s2 := &AppStatusStruct{
 		ID: s.Model.ID,
 		APP_NAME: s.APP_NAME, 
@@ -161,7 +186,7 @@ func GetAppStatusStructFromStatusStruct(s *db.StatusStruct) *AppStatusStruct {
 }
 
 // check if list contain ID
-func IfContains(s []int, e int) bool {
+func Ifcontains(s []int, e int) bool {
     for _, a := range s {
         if a == e {
             return true

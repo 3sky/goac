@@ -1,31 +1,34 @@
-package static
+package main
 
 import (
-	"p2go/db"
 	"testing"
 	"net/http"
 	"fmt"
-	"io/ioutil"
 	"os"
+	"io/ioutil"
 	"net/http/httptest"
 	
 
 	"github.com/stretchr/testify/assert"
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 )
 
-/** 
-At this moment still not work
-**/
 
 func TestDisplayHtml(t *testing.T) {
 
+	a := &App{}
+	var err error
+	a.DB, err = gorm.Open("sqlite3", "TestDB.db")
+	CheckErr(err)
+	defer a.DB.Close()
+
 	var bodyString string
-	db.MakeMIgration()
-	db.InsertToDB("Test_run_app_1", "1", "UnitTest_1")
+	a.MakeMigration()
+	a.InsertToDB("Test_run_app_1", "1", "UnitTest_1")
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", DisplayHtml).Methods("GET")
+	r.HandleFunc("/", a.DisplayHtml).Methods("GET")
 	
     ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -33,7 +36,7 @@ func TestDisplayHtml(t *testing.T) {
 	url := ts.URL + "/"
 
 	resp, err := http.Get(url)
-	db.CheckErr(err)
+	CheckErr(err)
 
 
 	if resp.StatusCode == http.StatusOK {
@@ -49,7 +52,7 @@ func TestDisplayHtml(t *testing.T) {
 	assert.Contains(t, bodyString, "<td>1 </td>" )
 	assert.Contains(t, bodyString, "UnitTest_1" )
 
-	err = os.Remove("./SimpleDB.db")
-	db.CheckErr(err)
+	err = os.Remove("TestDB.db")
+	CheckErr(err)
 		
 }

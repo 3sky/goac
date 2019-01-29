@@ -1,13 +1,10 @@
-package api
+package main
 
 import (
-	"p2go/db"
 	"testing"
 	"time"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	//"fmt"
 	"encoding/json"
 	"bytes"
 
@@ -18,21 +15,21 @@ import (
 )
 
 
-func TestIfContains(t *testing.T) {
+func TestIfcontains(t *testing.T) {
 
 	t1 := []int{1, 2, 3, 4}
 	t2 := []int{2, 3, 90, 12}
 
-	assert.True(t, IfContains(t1, 1))
-	assert.False(t, IfContains(t1, 10))
+	assert.True(t, Ifcontains(t1, 1))
+	assert.False(t, Ifcontains(t1, 10))
 
-	assert.True(t, IfContains(t2, 2))
-	assert.False(t, IfContains(t1, 13))
+	assert.True(t, Ifcontains(t2, 2))
+	assert.False(t, Ifcontains(t1, 13))
 }
 
 func TestGetAppStatusStructFromStatusStruct(t *testing.T) {
 	
-	h := &db.StatusStruct{
+	h := &StatusStruct{
 		Model: gorm.Model{ID: 1},
 		APP_NAME: "Test",
 		APP_VERSION: "1",
@@ -69,15 +66,21 @@ func TestSayHello(t *testing.T) {
 
 func TestDisplaAppByID(t *testing.T) {
 	
+	a := &App{}
+	var err error
+	a.DB, err = gorm.Open("sqlite3", "TestDB.db")
+	CheckErr(err)
+	defer a.DB.Close()
+
 	var h HelloStruct
 	var a1, a2 AppStatusStruct
 
-	db.MakeMIgration()
-	db.InsertToDB("Test_run_app_1", "1", "UnitTest_1")
-	db.InsertToDB("Test_run_app_2", "2", "UnitTest_2")
+	a.MakeMigration()
+	a.InsertToDB("Test_run_app_1", "1", "UnitTest_1")
+	a.InsertToDB("Test_run_app_2", "2", "UnitTest_2")
 
 	r := mux.NewRouter()
-	r.HandleFunc("/api/app/{id}", DisplaAppByID).Methods("GET")
+	r.HandleFunc("/api/app/{id}", a.DisplaAppByID).Methods("GET")
 	
     ts := httptest.NewServer(r)
     defer ts.Close()
@@ -88,11 +91,11 @@ func TestDisplaAppByID(t *testing.T) {
 	url3 := ts.URL + "/api/app/" + "3"
 
 	resp1, err := http.Get(url1)
-	db.CheckErr(err)
+	CheckErr(err)
 	resp2, err := http.Get(url2)
-	db.CheckErr(err)
+	CheckErr(err)
 	resp3, err := http.Get(url3)
-	db.CheckErr(err)
+	CheckErr(err)
 
 	_ = json.NewDecoder(resp1.Body).Decode(&a1)
 	_ = json.NewDecoder(resp2.Body).Decode(&a2)
@@ -117,8 +120,13 @@ func TestDisplaAppByID(t *testing.T) {
 
 func TestAddNewApp(t *testing.T) {
 	
-	
-	var st1, st2 db.StatusStruct
+	a := &App{}
+	var err error
+	a.DB, err = gorm.Open("sqlite3", "TestDB.db")
+	CheckErr(err)
+	defer a.DB.Close()
+
+	var st1, st2 StatusStruct
 	var h HelloStruct
 
     P1 := &AppStatusStruct{
@@ -149,12 +157,12 @@ func TestAddNewApp(t *testing.T) {
 	res2 := httptest.NewRecorder()
 	res3 := httptest.NewRecorder()
 
-	AddNewApp(res1, req1)
-	AddNewApp(res2, req2)
-	AddNewApp(res3, req3)
+	a.AddNewApp(res1, req1)
+	a.AddNewApp(res2, req2)
+	a.AddNewApp(res3, req3)
 
-	st1 = db.SelectFromDBWhereID(int64(3))
-	st2 = db.SelectFromDBWhereID(int64(4))
+	st1 = a.SelectFromDBWhereID(int64(3))
+	st2 = a.SelectFromDBWhereID(int64(4))
 
 	_ = json.NewDecoder(res3.Body).Decode(&h)
 
@@ -178,13 +186,19 @@ func TestAddNewApp(t *testing.T) {
 
 func TestDisplayAllApp(t *testing.T) {
 
+	a := &App{}
+	var err error
+	a.DB, err = gorm.Open("sqlite3", "TestDB.db")
+	CheckErr(err)
+	defer a.DB.Close()
+
 	var allApp AllApp
 	var app1, app2, app3, app4 AppStatusStruct
 
 	req := httptest.NewRequest("GET", "http://127.0.0.1:5000/api/apps", nil)
 	w := httptest.NewRecorder()
 
-	DisplayAllApp(w, req)
+	a.DisplayAllApp(w, req)
 
 	resp := w.Result()
 	
@@ -217,8 +231,6 @@ func TestDisplayAllApp(t *testing.T) {
 	assert.Equal(t, "11.1",       app4.APP_VERSION)
 	assert.Equal(t, "random guy", app4.UPDATE_BY)
 
-	err := os.Remove("./SimpleDB.db")
-	db.CheckErr(err)
 
 }
 
