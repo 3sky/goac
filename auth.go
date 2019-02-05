@@ -1,18 +1,17 @@
 package main
 
 import (
-
-	"net/http"
-	"strings"
 	"encoding/base64"
 	"encoding/json"
+	"net/http"
+	"strings"
 )
 
+//ErrorMsg get  error message
 type ErrorMsg struct {
-	CODE int `json:"ERROR_CODE"`
-	MSG string `json:"MSG"`
+	CODE int    `json:"ERROR_CODE"`
+	MSG  string `json:"MSG"`
 }
-
 
 func use(h http.HandlerFunc, middleware ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
 	for _, m := range middleware {

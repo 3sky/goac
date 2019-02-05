@@ -44,13 +44,13 @@ App contains basic http auth with `3sky:test` hardcoded in app.go, feel free to 
 - Add new app
 
   ```commandline
-  curl -i -H "Content-Type: application/json" -X POST -d '{"app_name": "Some App", "app_version": "2.123", "updated_by": "Kuba", "env": "dev", "branch": "hotfix"}' http://127.0.0.1:5000/api/app/new
+  curl -i -H "Content-Type: application/json" -X POST -d '{"AppName": "Some App", "AppVersion": "2.123", "UpdateBy": "Kuba", "Env": "dev", "Branch": "hotfix"}' http://127.0.0.1:5000/api/app/new
   ```
 
 - Update data
   
   ```commandline
-  curl -i -H "Content-Type: application/json" -X PUT -d '{"app_name": "GO API", "app_version": "0.95"}' http://127.0.0.1:5000/api/app/2
+  curl -i -H "Content-Type: application/json" -X PUT -d '{"AppName": "GO API", "AppVersion": "0.95"}' http://127.0.0.1:5000/api/app/2
   ```
 
 - Delete data

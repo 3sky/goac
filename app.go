@@ -1,37 +1,39 @@
 package main
 
 import (
-
 	"net/http"
 	"os"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-
-
 )
+
+// User for Basic Auth
 type User struct {
-	username  string
-	password  string
+	username string
+	password string
 }
 
+// App init structure
 type App struct {
-    Router *mux.Router
-    DB     *gorm.DB
+	Router *mux.Router
+	DB     *gorm.DB
 }
 
+//Initialize the app
 func (a *App) Initialize(dbname string) {
 
-    var err error
+	var err error
 	a.DB, err = gorm.Open("sqlite3", dbname)
 	CheckErr(err)
 
 	a.MakeMigration()
-    a.Router = mux.NewRouter()
-    a.initializeRoutes()
+	a.Router = mux.NewRouter()
+	a.initializeRoutes()
 }
 
+// Run the app on port
 func (a *App) Run(addr string) {
 	loggedRouter := handlers.LoggingHandler(os.Stdout, a.Router)
 	http.ListenAndServe(addr, loggedRouter)
@@ -50,11 +52,11 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/api/app/{id}", use(a.UpdateData, p.basicAuth)).Methods("PUT")
 	a.Router.HandleFunc("/api/app/{id}", use(a.DeleteData, p.basicAuth)).Methods("DELETE")
 	a.Router.HandleFunc("/api/apps", use(a.DisplayAllApp, p.basicAuth)).Methods("GET")
-	a.Router.HandleFunc("/", a.DisplayHtml).Methods("GET")
+	a.Router.HandleFunc("/", a.DisplayHTML).Methods("GET")
 
 }
 
-
+// CheckErr check errors
 func CheckErr(err error) {
 	if err != nil {
 		panic(err)
