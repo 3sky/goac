@@ -13,7 +13,7 @@ import (
 )
 
 
-func TestMain(t *testing.T) {
+func TestApp(t *testing.T) {
 	
 	a := &App{}
 	var err error

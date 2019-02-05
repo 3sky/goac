@@ -15,14 +15,14 @@ App contains basic http auth with `3sky:test` hardcoded in app.go, feel free to 
 - Build app
 
   ```bash
-  go build -o someApp app.go
+  go build -o VersionTrack ./...
   ```
 
 - Ship it !
 
   ```bash
   chmod +x
-  ./someApp > someApp.log &
+  ./VersionTrack > VersionTrack.log &
   ```
 
 ### Base command usage
