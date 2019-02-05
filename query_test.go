@@ -36,11 +36,13 @@ func TestInsertToDB(t *testing.T) {
 
 	var status StatusStruct
 	
-	a.InsertToDB("Test_run_app", "1", "UnitTest")
+	a.InsertToDB("Test_run_app", "1", "UnitTest", "dev", "testing")
 	a.DB.Where("app_name = ?", "Test_run_app").First(&status)
 	assert.Equal(t, "Test_run_app", string(status.APP_NAME))
 	assert.Equal(t, "1",            string(status.APP_VERSION))
 	assert.Equal(t, "UnitTest",     string(status.UPDATE_BY))
+	assert.Equal(t, "dev",          string(status.ENVIRONMENT))
+	assert.Equal(t, "testing",      string(status.BRANCH))
 
 }
 
@@ -75,9 +77,9 @@ func TestGetAllID(t *testing.T) {
 	CheckErr(err)
 	defer a.DB.Close()
 
-	a.InsertToDB("Test 1", "1", "Admin 1")
-	a.InsertToDB("Test 2", "2", "Admin 2")
-	a.InsertToDB("Test 3", "3", "Admin 3")
+	a.InsertToDB("Test 1", "1", "Admin 1", "dev1", "testing1")
+	a.InsertToDB("Test 2", "2", "Admin 2", "dev2", "testing2")
+	a.InsertToDB("Test 3", "3", "Admin 3", "dev2", "testing3")
 	IDs := a.GetAllID()
 	assert.Len(t, IDs, 8)
 	
@@ -94,7 +96,9 @@ func TestUpdateSelectedColumn(t *testing.T) {
 	var s1, s2, s3 StatusStruct
 	a.UpdateSelectedColumn(6,"app_name", "Test_pass")
 	a.UpdateSelectedColumn(7,"updated_by", "Greate Tester")
+	a.UpdateSelectedColumn(7,"env", "stage")
 	a.UpdateSelectedColumn(8,"app_version", "10")
+	a.UpdateSelectedColumn(8,"branch", "hotfix")
 	a.UpdateSelectedColumn(9,"dupa", "dyap")
 	
 	s1 = a.SelectFromDBWhereID(int64(6))
@@ -104,15 +108,17 @@ func TestUpdateSelectedColumn(t *testing.T) {
 
 	assert.Equal(t, "Test_pass", s1.APP_NAME)
 	assert.Equal(t, "1",         s1.APP_VERSION)
-	assert.Equal(t, "Admin 1",  s1.UPDATE_BY)
+	assert.Equal(t, "Admin 1",   s1.UPDATE_BY)
 
 	assert.Equal(t, "Test 2",        s2.APP_NAME)
 	assert.Equal(t, "2",             s2.APP_VERSION)
 	assert.Equal(t, "Greate Tester", s2.UPDATE_BY)
+	assert.Equal(t, "stage",         s2.ENVIRONMENT)
 
 	assert.Equal(t, "Test 3",  s3.APP_NAME)
 	assert.Equal(t, "10",      s3.APP_VERSION)
-	assert.Equal(t, "Admin 3", s3.UPDATE_BY, )
+	assert.Equal(t, "Admin 3", s3.UPDATE_BY )
+	assert.Equal(t, "hotfix",  s3.BRANCH )
 
 }
 

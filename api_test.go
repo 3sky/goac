@@ -35,6 +35,9 @@ func TestGetAppStatusStructFromStatusStruct(t *testing.T) {
 		APP_VERSION: "1",
 		UPDATE_DATE: time.Now(),
 		UPDATE_BY: "Admin 1",
+		ENVIRONMENT: "dev",
+	    BRANCH: "testing",
+		
 	}
 
 	app := GetAppStatusStructFromStatusStruct(h)
@@ -42,6 +45,8 @@ func TestGetAppStatusStructFromStatusStruct(t *testing.T) {
 	assert.Equal(t, h.APP_NAME, app.APP_NAME)
 	assert.Equal(t, h.APP_VERSION, app.APP_VERSION)
 	assert.Equal(t, h.UPDATE_BY, app.UPDATE_BY)
+	assert.Equal(t, h.ENVIRONMENT, app.ENVIRONMENT)
+	assert.Equal(t, h.BRANCH, app.BRANCH)
 
 }
 
@@ -76,8 +81,8 @@ func TestDisplaAppByID(t *testing.T) {
 	var a1, a2 AppStatusStruct
 
 	a.MakeMigration()
-	a.InsertToDB("Test_run_app_1", "1", "UnitTest_1")
-	a.InsertToDB("Test_run_app_2", "2", "UnitTest_2")
+	a.InsertToDB("Test_run_app_1", "1", "UnitTest_1", "dev", "fix_12")
+	a.InsertToDB("Test_run_app_2", "2", "UnitTest_2", "stage", "new_feature")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/app/{id}", a.DisplaAppByID).Methods("GET")
@@ -106,12 +111,16 @@ func TestDisplaAppByID(t *testing.T) {
 	assert.Equal(t, "Test_run_app_1", string(a1.APP_NAME) )
 	assert.Equal(t, "1",              a1.APP_VERSION)
 	assert.Equal(t, "UnitTest_1",     a1.UPDATE_BY )
+	assert.Equal(t, "dev",            a1.ENVIRONMENT)
+	assert.Equal(t, "fix_12",         a1.BRANCH )
 
 	assert.Equal(t, 200,              resp2.StatusCode)
 	assert.Equal(t, 2,                int(a2.ID))
 	assert.Equal(t, "Test_run_app_2", string(a2.APP_NAME))
 	assert.Equal(t, "2",              a2.APP_VERSION)
 	assert.Equal(t, "UnitTest_2",     a2.UPDATE_BY)
+	assert.Equal(t, "stage",          a2.ENVIRONMENT)
+	assert.Equal(t, "new_feature",    a2.BRANCH )
 
 	assert.Equal(t, 200,                    resp3.StatusCode)
 	assert.Equal(t, "No app with given ID", h.SAY)
@@ -133,6 +142,8 @@ func TestAddNewApp(t *testing.T) {
 		APP_NAME: "New_app",
 		APP_VERSION: "1.01",
 		UPDATE_BY:  "test1",
+		ENVIRONMENT: "dev",
+		BRANCH: "testing",
 	}
 
 	P2 := &AppStatusStruct{
@@ -171,12 +182,16 @@ func TestAddNewApp(t *testing.T) {
 	assert.Equal(t, "New_app", st1.APP_NAME)
 	assert.Equal(t, "1.01",    st1.APP_VERSION)
 	assert.Equal(t, "test1",   st1.UPDATE_BY)
+	assert.Equal(t, "dev",     st1.ENVIRONMENT)
+	assert.Equal(t, "testing", st1.BRANCH )
 
 	assert.Equal(t, 200,          res2.Code)
 	assert.Equal(t, 4,            int(st2.Model.ID))
 	assert.Equal(t, "New_app_2",  st2.APP_NAME)
 	assert.Equal(t, "11.1",       st2.APP_VERSION)
 	assert.Equal(t, "random guy", st2.UPDATE_BY)
+	assert.Equal(t, "",        st2.ENVIRONMENT)
+	assert.Equal(t, "",    st2.BRANCH )
 
 	assert.Equal(t, 200,                                             res3.Code  )
 	assert.Equal(t, "Application name and version are mandatory ! ", h.SAY)

@@ -21,6 +21,8 @@ type AppStatusStruct struct {
 	ID uint 
 	APP_NAME string `json:"app_name"` 
 	APP_VERSION string `json:"app_version"`
+	ENVIRONMENT string `json:"env"`
+	BRANCH string `json:"branch"`
 	UPDATE_DATE string`json:"updated_date"`
 	UPDATE_BY string `json:"updated_by"`
 }
@@ -76,7 +78,7 @@ func (a *App) AddNewApp(w http.ResponseWriter, r *http.Request) {
 			updater = app.UPDATE_BY
 		}
 
-		a.InsertToDB(app.APP_NAME, app.APP_VERSION, updater)
+		a.InsertToDB(app.APP_NAME, app.APP_VERSION, updater, app.ENVIRONMENT, app.BRANCH)
 
 	} else {
 		h := &HelloStruct{SAY: "Application name and version are mandatory ! "}
@@ -107,6 +109,14 @@ func (a *App) UpdateData(w http.ResponseWriter, r *http.Request) {
 
 		if len(app.APP_VERSION) > 0 {
 			a.UpdateSelectedColumn(int64(i), "app_version", app.APP_VERSION)
+		}
+		
+		if len(app.ENVIRONMENT) > 0 {
+			a.UpdateSelectedColumn(int64(i), "env", app.ENVIRONMENT)
+		} 
+
+		if len(app.BRANCH) > 0 {
+			a.UpdateSelectedColumn(int64(i), "branch", app.BRANCH)
 		} 
 		
 		var app_after_update interface{};
@@ -178,6 +188,8 @@ func GetAppStatusStructFromStatusStruct(s *StatusStruct) *AppStatusStruct {
 		ID: s.Model.ID,
 		APP_NAME: s.APP_NAME, 
 		APP_VERSION: s.APP_VERSION, 
+		ENVIRONMENT: s.ENVIRONMENT,
+		BRANCH: s.BRANCH,
 		UPDATE_DATE: s.UPDATE_DATE.Format("2006-01-02 15:04:05"), 
 		UPDATE_BY: s.UPDATE_BY,
 	}

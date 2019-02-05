@@ -6,7 +6,6 @@ import (
 	"testing"
 	"net/http"
 	"net/http/httptest"
-	"encoding/base64"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/gorilla/mux"

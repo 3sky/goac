@@ -25,7 +25,7 @@ func TestDisplayHtml(t *testing.T) {
 
 	var bodyString string
 	a.MakeMigration()
-	a.InsertToDB("Test_run_app_1", "1", "UnitTest_1")
+	a.InsertToDB("Test_run_app_1", "1", "UnitTest_1", "dev", "hotfix1")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", a.DisplayHtml).Methods("GET")

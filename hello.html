@@ -24,6 +24,8 @@ tr:nth-child(even) {
     <tr>
       <th>App Name</th>
       <th>App Version</th> 
+      <th>Environment</th> 
+      <th>Branch</th> 
       <th>Updated Date</th>
       <th>Updated By</th>
     </tr>
@@ -31,6 +33,8 @@ tr:nth-child(even) {
     <tr>
         <td>{{ .APP_NAME }} </td>
         <td>{{ .APP_VERSION }} </td>
+        <td>{{ .ENVIRONMENT }} </td>
+        <td>{{ .BRANCH }} </td>
         <td>{{ .UPDATE_DATE.Format "Jan 02, 2006 15:04:05 UTC" }} </td>
         <td>{{ .UPDATE_BY }} </td>  
     </tr>
