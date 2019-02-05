@@ -26,7 +26,6 @@ func (a *App) Initialize(dbname string) {
     var err error
 	a.DB, err = gorm.Open("sqlite3", dbname)
 	CheckErr(err)
-	//defer a.DB.Close()
 
 	a.MakeMigration()
     a.Router = mux.NewRouter()

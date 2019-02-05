@@ -35,11 +35,7 @@ func TestInsertToDB(t *testing.T) {
 	defer a.DB.Close()
 
 	var status StatusStruct
-
-	// db, err := gorm.Open("sqlite3", "./SimpleDB.db")
-	// CheckErr(err)
-	// defer db.Close()
-
+	
 	a.InsertToDB("Test_run_app", "1", "UnitTest")
 	a.DB.Where("app_name = ?", "Test_run_app").First(&status)
 	assert.Equal(t, "Test_run_app", string(status.APP_NAME))
@@ -59,9 +55,6 @@ func TestSelectFromDBWhereID(t *testing.T) {
 
 	var test_status StatusStruct
 	var status StatusStruct
-
-	// db, err := gorm.Open("sqlite3", "./SimpleDB.db")
-	// CheckErr(err)
 
 	a.DB.Where("app_name = ?", "Test_run_app").First(&test_status)
 
