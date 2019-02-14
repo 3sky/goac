@@ -1,24 +1,24 @@
 package main
 
 import (
-
 	"time"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-
 )
 
+//StatusStruct - data from DB
 type StatusStruct struct {
 	gorm.Model
-	APP_NAME string `main"app_name"` 
-	APP_VERSION string `main:"app_version"`
-	ENVIRONMENT string `main:"env"`
-	BRANCH string `main:"branch"`
-	UPDATE_DATE time.Time `main:"updated_date"`
-	UPDATE_BY string `main:"updated_by"`
+	AppName     string    `main:"app_name"`
+	AppVersion  string    `main:"app_version"`
+	Environment string    `main:"environment"`
+	Branch      string    `main:"branch"`
+	UpdateDate  time.Time `main:"update_date"`
+	UpdateBy    string    `main:"update_by"`
 }
 
-
+//DeleteRowByID - Delete row
 func (a *App) DeleteRowByID(id int64) error {
 
 	var status StatusStruct
@@ -36,7 +36,8 @@ func (a *App) DeleteRowByID(id int64) error {
 	return nil
 }
 
-func (a *App) UpdateSelectedColumn(id int64, col, new_val string) error {
+//UpdateSelectedColumn - Update column
+func (a *App) UpdateSelectedColumn(id int64, col, newVal string) error {
 
 	var status StatusStruct
 
@@ -46,34 +47,46 @@ func (a *App) UpdateSelectedColumn(id int64, col, new_val string) error {
 	}
 
 	if col == "app_name" {
-		if err := a.DB.Model(&status).Update("APP_NAME", new_val).Error; err != nil {return err}
-	} else if col == "updated_by" {
-		if err := a.DB.Model(&status).Update("UPDATE_BY", new_val).Error; err != nil {return err}
+		if err := a.DB.Model(&status).Update("app_name", newVal).Error; err != nil {
+			return err
+		}
+	} else if col == "update_by" {
+		if err := a.DB.Model(&status).Update("update_by", newVal).Error; err != nil {
+			return err
+		}
 	} else if col == "app_version" {
-		if err := a.DB.Model(&status).Update("APP_VERSION", new_val).Error; err != nil {return err}
-	} else if col == "env" {
-		if err := a.DB.Model(&status).Update("ENVIRONMENT", new_val).Error; err != nil {return err}
+		if err := a.DB.Model(&status).Update("app_version", newVal).Error; err != nil {
+			return err
+		}
+	} else if col == "environment" {
+		if err := a.DB.Model(&status).Update("environment", newVal).Error; err != nil {
+			return err
+		}
 	} else if col == "branch" {
-		if err := a.DB.Model(&status).Update("BRANCH", new_val).Error; err != nil {return err}
+		if err := a.DB.Model(&status).Update("branch", newVal).Error; err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
+//SelectFromDBWhereID - Select row from DB
 func (a *App) SelectFromDBWhereID(id int64) (StatusStruct, error) {
-	
+
 	var status StatusStruct
-	
-	err := a.DB.First(&status, id).Error 
-	
+
+	err := a.DB.First(&status, id).Error
+
 	if err != nil {
 		return status, err
 	}
 
 	return status, nil
-	
+
 }
 
+//GetAllID - Get all IDs frm DB
 func (a *App) GetAllID() ([]int, error) {
 
 	var statuses []StatusStruct
@@ -82,26 +95,26 @@ func (a *App) GetAllID() ([]int, error) {
 	err := a.DB.Find(&statuses).Error
 	if err != nil {
 		return ID, err
-	} else {
-		for _, data := range statuses {
-			ID = append(ID, int(data.Model.ID))
-		}
 	}
-	
+
+	for _, data := range statuses {
+		ID = append(ID, int(data.Model.ID))
+	}
 
 	return ID, nil
 
 }
 
-func (a *App) InsertToDB(app, version, updater, env, branch string) error {
+//InsertToDB - Insert Data to DB
+func (a *App) InsertToDB(app, version, updater, Environment, Branch string) error {
 
 	err := a.DB.Create(&StatusStruct{
-		APP_NAME: app, 
-		APP_VERSION: version, 
-		ENVIRONMENT: env,
-		BRANCH: branch,
-		UPDATE_DATE: time.Now(),
-		UPDATE_BY: updater}).Error
+		AppName:     app,
+		AppVersion:  version,
+		Environment: Environment,
+		Branch:      Branch,
+		UpdateDate:  time.Now(),
+		UpdateBy:    updater}).Error
 	if err != nil {
 		return err
 	}
@@ -110,6 +123,7 @@ func (a *App) InsertToDB(app, version, updater, env, branch string) error {
 
 }
 
+//MakeMigration - Make schema migration
 func (a *App) MakeMigration() error {
 
 	err := a.DB.AutoMigrate(&StatusStruct{}).Error
@@ -119,4 +133,3 @@ func (a *App) MakeMigration() error {
 
 	return nil
 }
-

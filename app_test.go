@@ -1,25 +1,21 @@
 package main
 
-
 import (
-
-	"testing"
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"fmt"
-	"encoding/json"
-	"bytes"
+	"testing"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestApp(t *testing.T) {
-	
 
 	P := &AppStatusStruct{
-		UPDATE_BY: "test3",
+		UpdateBy: "test3",
 	}
 
 	a := createTestDBConnection()
@@ -31,9 +27,9 @@ func TestApp(t *testing.T) {
 	router.HandleFunc("/api/app/{id}", a.UpdateData).Methods("PUT")
 	router.HandleFunc("/api/app/{id}", a.DeleteData).Methods("DELETE")
 	router.HandleFunc("/api/apps", a.DisplayAllApp).Methods("GET")
-	router.HandleFunc("/", a.DisplayHtml).Methods("GET")
+	router.HandleFunc("/", a.DisplayHTML).Methods("GET")
 	ts := httptest.NewServer(router)
-    defer ts.Close()
+	defer ts.Close()
 
 	url1 := ts.URL + "/hello"
 	url2 := ts.URL + "/api/app/" + "10"
@@ -60,7 +56,6 @@ func TestApp(t *testing.T) {
 		fmt.Printf("Error while make new GET Request: %v", err)
 	}
 
-
 	payload, err := json.Marshal(P)
 	if err != nil {
 		fmt.Printf("Error while marshall in TestAddNewApp: %v", err)
@@ -69,16 +64,16 @@ func TestApp(t *testing.T) {
 	req, err := http.NewRequest("POST", "http://127.0.0.1:5000/api/app/new", bytes.NewBuffer(payload))
 	if err != nil {
 		fmt.Printf("Error while make new POST Request: %v", err)
-	}	
+	}
 
 	resp5 := httptest.NewRecorder()
 
 	a.AddNewApp(resp5, req)
 
-	assert.Equal(t, 200,  resp1.StatusCode)
-	assert.Equal(t, 200,  resp2.StatusCode)
-	assert.Equal(t, 200,  resp3.StatusCode)
-	assert.Equal(t, 200,  resp4.StatusCode)
-	assert.Equal(t, 200,  resp5.Code)
+	assert.Equal(t, 200, resp1.StatusCode)
+	assert.Equal(t, 200, resp2.StatusCode)
+	assert.Equal(t, 200, resp3.StatusCode)
+	assert.Equal(t, 200, resp4.StatusCode)
+	assert.Equal(t, 200, resp5.Code)
 
 }

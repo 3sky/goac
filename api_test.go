@@ -1,20 +1,19 @@
 package main
 
 import (
-	"testing"
-	"time"
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"encoding/json"
-	"bytes"
-	"fmt"
+	"testing"
+	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 )
-
 
 func TestIfcontains(t *testing.T) {
 
@@ -29,25 +28,24 @@ func TestIfcontains(t *testing.T) {
 }
 
 func TestGetAppStatusStructFromStatusStruct(t *testing.T) {
-	
+
 	h := &StatusStruct{
-		Model: gorm.Model{ID: 1},
-		APP_NAME: "Test",
-		APP_VERSION: "1",
-		UPDATE_DATE: time.Now(),
-		UPDATE_BY: "Admin 1",
-		ENVIRONMENT: "dev",
-	    BRANCH: "testing",
-		
+		Model:       gorm.Model{ID: 1},
+		AppName:     "Test",
+		AppVersion:  "1",
+		UpdateDate:  time.Now(),
+		UpdateBy:    "Admin 1",
+		Environment: "dev",
+		Branch:      "testing",
 	}
 
 	app := GetAppStatusStructFromStatusStruct(h)
 
-	assert.Equal(t, h.APP_NAME, app.APP_NAME)
-	assert.Equal(t, h.APP_VERSION, app.APP_VERSION)
-	assert.Equal(t, h.UPDATE_BY, app.UPDATE_BY)
-	assert.Equal(t, h.ENVIRONMENT, app.ENVIRONMENT)
-	assert.Equal(t, h.BRANCH, app.BRANCH)
+	assert.Equal(t, h.AppName, app.AppName)
+	assert.Equal(t, h.AppVersion, app.AppVersion)
+	assert.Equal(t, h.UpdateBy, app.UpdateBy)
+	assert.Equal(t, h.Environment, app.Environment)
+	assert.Equal(t, h.Branch, app.Branch)
 
 }
 
@@ -61,19 +59,19 @@ func TestSayHello(t *testing.T) {
 	SayHello(w, req)
 
 	resp := w.Result()
-	
+
 	err := json.NewDecoder(resp.Body).Decode(&h)
 	if err != nil {
 		fmt.Printf("Error while decode in TestSayHello: %v", err)
 	}
-	assert.Equal(t, 200,          resp.StatusCode)
-	assert.Equal(t, 1,            h.ID)
-	assert.Equal(t, "Hello Kuba", h.SAY)
-		
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, 1, h.ID)
+	assert.Equal(t, "Hello Kuba", h.Say)
+
 }
 
 func TestDisplayAppByID(t *testing.T) {
-	
+
 	a := createTestDBConnection()
 	defer a.DB.Close()
 
@@ -84,7 +82,7 @@ func TestDisplayAppByID(t *testing.T) {
 	if err != nil {
 		fmt.Printf("Error with insert into DB in TestDisplayAppByID: %v", err)
 	}
-	
+
 	err = a.InsertToDB("Test_run_app_1", "1", "UnitTest_1", "dev", "fix_12")
 	if err != nil {
 		fmt.Printf("Error with insert into DB in TestDisplayAppByID: %v", err)
@@ -97,10 +95,9 @@ func TestDisplayAppByID(t *testing.T) {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/app/{id}", a.DisplayAppByID).Methods("GET")
-	
-    ts := httptest.NewServer(r)
-    defer ts.Close()
 
+	ts := httptest.NewServer(r)
+	defer ts.Close()
 
 	url1 := ts.URL + "/api/app/" + "1"
 	url2 := ts.URL + "/api/app/" + "2"
@@ -136,52 +133,51 @@ func TestDisplayAppByID(t *testing.T) {
 		fmt.Printf("Error while decode in TestDisplayAppByID: %v", err)
 	}
 
+	assert.Equal(t, 200, resp1.StatusCode)
+	assert.Equal(t, 1, int(a1.ID))
+	assert.Equal(t, "Test_run_app_1", string(a1.AppName))
+	assert.Equal(t, "1", a1.AppVersion)
+	assert.Equal(t, "UnitTest_1", a1.UpdateBy)
+	assert.Equal(t, "dev", a1.Environment)
+	assert.Equal(t, "fix_12", a1.Branch)
 
-	assert.Equal(t, 200,              resp1.StatusCode)
-	assert.Equal(t, 1,                int(a1.ID))
-	assert.Equal(t, "Test_run_app_1", string(a1.APP_NAME) )
-	assert.Equal(t, "1",              a1.APP_VERSION)
-	assert.Equal(t, "UnitTest_1",     a1.UPDATE_BY )
-	assert.Equal(t, "dev",            a1.ENVIRONMENT)
-	assert.Equal(t, "fix_12",         a1.BRANCH )
+	assert.Equal(t, 200, resp2.StatusCode)
+	assert.Equal(t, 2, int(a2.ID))
+	assert.Equal(t, "Test_run_app_2", string(a2.AppName))
+	assert.Equal(t, "2", a2.AppVersion)
+	assert.Equal(t, "UnitTest_2", a2.UpdateBy)
+	assert.Equal(t, "stage", a2.Environment)
+	assert.Equal(t, "new_feature", a2.Branch)
 
-	assert.Equal(t, 200,              resp2.StatusCode)
-	assert.Equal(t, 2,                int(a2.ID))
-	assert.Equal(t, "Test_run_app_2", string(a2.APP_NAME))
-	assert.Equal(t, "2",              a2.APP_VERSION)
-	assert.Equal(t, "UnitTest_2",     a2.UPDATE_BY)
-	assert.Equal(t, "stage",          a2.ENVIRONMENT)
-	assert.Equal(t, "new_feature",    a2.BRANCH )
-
-	assert.Equal(t, 200,                    resp3.StatusCode)
-	assert.Equal(t, "No app with given ID", h.SAY)
+	assert.Equal(t, 200, resp3.StatusCode)
+	assert.Equal(t, "No app with given ID", h.Say)
 
 }
 
 func TestAddNewApp(t *testing.T) {
-	
+
 	a := createTestDBConnection()
 	defer a.DB.Close()
 
 	var st1, st2 StatusStruct
 	var h HelloStruct
 
-    P1 := &AppStatusStruct{
-		APP_NAME: "New_app",
-		APP_VERSION: "1.01",
-		UPDATE_BY:  "test1",
-		ENVIRONMENT: "dev",
-		BRANCH: "testing",
+	P1 := &AppStatusStruct{
+		AppName:     "New_app",
+		AppVersion:  "1.01",
+		UpdateBy:    "test1",
+		Environment: "dev",
+		Branch:      "testing",
 	}
 
 	P2 := &AppStatusStruct{
-		APP_NAME: "New_app_2",
-		APP_VERSION: "11.1",
+		AppName:    "New_app_2",
+		AppVersion: "11.1",
 	}
 
 	P3 := &AppStatusStruct{
-		APP_NAME: "New_app_2",
-		UPDATE_BY: "test3",
+		AppName:  "New_app_2",
+		UpdateBy: "test3",
 	}
 
 	jsonP1, err := json.Marshal(P1)
@@ -199,7 +195,6 @@ func TestAddNewApp(t *testing.T) {
 		fmt.Printf("Error while marshall in TestAddNewApp: %v", err)
 	}
 
-
 	req1, err := http.NewRequest("POST", "http://127.0.0.1:5000/api/app/new", bytes.NewBuffer(jsonP1))
 	if err != nil {
 		fmt.Printf("Error while make new POST Request: %v", err)
@@ -214,7 +209,7 @@ func TestAddNewApp(t *testing.T) {
 	if err != nil {
 		fmt.Printf("Error while make new POST Request: %v", err)
 	}
-	
+
 	res1 := httptest.NewRecorder()
 	res2 := httptest.NewRecorder()
 	res3 := httptest.NewRecorder()
@@ -238,26 +233,25 @@ func TestAddNewApp(t *testing.T) {
 		fmt.Printf("Error while decode in TestAddNewApp: %v", err)
 	}
 
-	assert.Equal(t, 200,       res1.Code )
-	assert.Equal(t, 3,         int(st1.Model.ID))
-	assert.Equal(t, "New_app", st1.APP_NAME)
-	assert.Equal(t, "1.01",    st1.APP_VERSION)
-	assert.Equal(t, "test1",   st1.UPDATE_BY)
-	assert.Equal(t, "dev",     st1.ENVIRONMENT)
-	assert.Equal(t, "testing", st1.BRANCH )
+	assert.Equal(t, 200, res1.Code)
+	assert.Equal(t, 3, int(st1.Model.ID))
+	assert.Equal(t, "New_app", st1.AppName)
+	assert.Equal(t, "1.01", st1.AppVersion)
+	assert.Equal(t, "test1", st1.UpdateBy)
+	assert.Equal(t, "dev", st1.Environment)
+	assert.Equal(t, "testing", st1.Branch)
 
-	assert.Equal(t, 200,          res2.Code)
-	assert.Equal(t, 4,            int(st2.Model.ID))
-	assert.Equal(t, "New_app_2",  st2.APP_NAME)
-	assert.Equal(t, "11.1",       st2.APP_VERSION)
-	assert.Equal(t, "random guy", st2.UPDATE_BY)
-	assert.Equal(t, "",           st2.ENVIRONMENT)
-	assert.Equal(t, "",           st2.BRANCH )
+	assert.Equal(t, 200, res2.Code)
+	assert.Equal(t, 4, int(st2.Model.ID))
+	assert.Equal(t, "New_app_2", st2.AppName)
+	assert.Equal(t, "11.1", st2.AppVersion)
+	assert.Equal(t, "random guy", st2.UpdateBy)
+	assert.Equal(t, "", st2.Environment)
+	assert.Equal(t, "", st2.Branch)
 
-	assert.Equal(t, 200,                                             res3.Code  )
-	assert.Equal(t, "Application name and version are mandatory ! ", h.SAY)
+	assert.Equal(t, 200, res3.Code)
+	assert.Equal(t, "Application name and version are mandatory ! ", h.Say)
 
-	
 }
 
 func TestDisplayAllApp(t *testing.T) {
@@ -274,8 +268,7 @@ func TestDisplayAllApp(t *testing.T) {
 	a.DisplayAllApp(w, req)
 
 	resp := w.Result()
-	
-	
+
 	err := json.NewDecoder(resp.Body).Decode(&allApp)
 	if err != nil {
 		fmt.Printf("Error while decode in TestDisplayAllApp: %v", err)
@@ -286,42 +279,37 @@ func TestDisplayAllApp(t *testing.T) {
 	app3 = allApp.App[2]
 	app4 = allApp.App[3]
 
-	
-	assert.Equal(t, 1,                int(app1.ID))
-	assert.Equal(t, "Test_run_app_1", app1.APP_NAME)
-	assert.Equal(t, "1",              app1.APP_VERSION)
-	assert.Equal(t, "UnitTest_1",     app1.UPDATE_BY)
+	assert.Equal(t, 1, int(app1.ID))
+	assert.Equal(t, "Test_run_app_1", app1.AppName)
+	assert.Equal(t, "1", app1.AppVersion)
+	assert.Equal(t, "UnitTest_1", app1.UpdateBy)
 
-	assert.Equal(t, 2,                int(app2.ID))
-	assert.Equal(t, "Test_run_app_2", app2.APP_NAME)
-	assert.Equal(t, "2",              app2.APP_VERSION)
-	assert.Equal(t, "UnitTest_2",     app2.UPDATE_BY)
+	assert.Equal(t, 2, int(app2.ID))
+	assert.Equal(t, "Test_run_app_2", app2.AppName)
+	assert.Equal(t, "2", app2.AppVersion)
+	assert.Equal(t, "UnitTest_2", app2.UpdateBy)
 
-	assert.Equal(t, 3,         int(app3.ID))
-	assert.Equal(t, "New_app", app3.APP_NAME)
-	assert.Equal(t, "1.01",    app3.APP_VERSION)
-	assert.Equal(t, "test1",   app3.UPDATE_BY)
- 
-	assert.Equal(t, 4,            int(app4.ID))
-	assert.Equal(t, "New_app_2",  app4.APP_NAME)
-	assert.Equal(t, "11.1",       app4.APP_VERSION)
-	assert.Equal(t, "random guy", app4.UPDATE_BY)
+	assert.Equal(t, 3, int(app3.ID))
+	assert.Equal(t, "New_app", app3.AppName)
+	assert.Equal(t, "1.01", app3.AppVersion)
+	assert.Equal(t, "test1", app3.UpdateBy)
 
+	assert.Equal(t, 4, int(app4.ID))
+	assert.Equal(t, "New_app_2", app4.AppName)
+	assert.Equal(t, "11.1", app4.AppVersion)
+	assert.Equal(t, "random guy", app4.UpdateBy)
 
 }
-
-
-
 
 /** at this moment test doesn't work PUT Method test
 func TestDeleteData(t *testing.T) {
 
-	
+
 	var h1 HelloStruct
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/app/{id}", DisplaAppByID).Methods("DELETE")
-	
+
     ts := httptest.NewServer(r)
     defer ts.Close()
 
@@ -331,8 +319,8 @@ func TestDeleteData(t *testing.T) {
 	DeleteData(w, req)
 
 	resp := w.Result()
-	
-	
+
+
 	_ = json.NewDecoder(resp.Body).Decode(&h1)
 
 
@@ -340,7 +328,6 @@ func TestDeleteData(t *testing.T) {
 
 }
 **/
-
 
 /** at this moment test doesn't work PUT Method test
 func TestUpdateData(t * testing.T) {
@@ -351,25 +338,25 @@ func TestUpdateData(t * testing.T) {
 	// var st3db db.StatusStruct
 	// var st3web HelloStruct
 
-	//p2 := []byte(`{"app_name": "2.0" }`)
-	p1 := []byte(`{"app_name": "Not_test_now", "app_version": "10.12"`)
-	// p3 := []byte(`{"app_name": "API Proxy Newier", "app_version": "1.2", "updated_by": "Kuba 2" }`)
-	
+	//p2 := []byte(`{"AppName": "2.0" }`)
+	p1 := []byte(`{"AppName": "Not_test_now", "AppVersion": "10.12"`)
+	// p3 := []byte(`{"AppName": "API Proxy Newier", "AppVersion": "1.2", "updated_by": "Kuba 2" }`)
+
 	r := mux.NewRouter()
 	ts := httptest.NewServer(r)
 	client := &http.Client{}
 	url1 := ts.URL + "/api/app/1"
 	req1, _ := http.NewRequest("PUT", url1, bytes.NewBuffer(p1))
-	
-	
+
+
 
 	defer ts.Close()
-	
+
 	res1, err := client.Do(req1)
 
 
     //eq1, _ := http.NewRequest("PUT", "http://127.0.0.1:5000/api/app/1", bytes.NewBuffer(p1))
-	//res1 := httptest.NewRecorder()	
+	//res1 := httptest.NewRecorder()
 	//handler := http.HandlerFunc(UpdateData)
 
 	//handler.ServeHTTP(res1, req1)
@@ -406,7 +393,7 @@ func TestUpdateData(t * testing.T) {
 	// res1 := w1.Result()
 	// res2 := w2.Result()
 	// res3 := w3.Result()
-	
+
 	// _ = json.NewDecoder(res1.Body).Decode(&st1web)
 	// _ = json.NewDecoder(res2.Body).Decode(&st2web)
 	// _ = json.NewDecoder(res3.Body).Decode(&st3web)
@@ -424,22 +411,22 @@ func TestUpdateData(t * testing.T) {
 	// assert.Equal(t, res1.StatusCode, 200)
 	// assert.Equal(t, int(st1web.Model.ID), 1)
 	// assert.Equal(t, st1web.Model.ID, st1db.Model.ID)
-	// assert.Equal(t, st1web.APP_VERSION, "2.0")
-	// assert.Equal(t, st1web.APP_VERSION, st1db.APP_VERSION)
-	// assert.Equal(t, st1web.APP_NAME, st1db.APP_NAME)
-	
+	// assert.Equal(t, st1web.AppVersion, "2.0")
+	// assert.Equal(t, st1web.AppVersion, st1db.AppVersion)
+	// assert.Equal(t, st1web.AppName, st1db.AppName)
+
 	// //Case 2
 	// assert.Equal(t, res2.StatusCode, 200)
 	// assert.Equal(t, int(st2web.Model.ID), 2)
 	// assert.Equal(t, st2web.Model.ID, st2db.Model.ID)
-	// assert.Equal(t, st2web.APP_VERSION, "10.12")
-	// assert.Equal(t, st2web.APP_VERSION, st2db.APP_VERSION)
-	// assert.Equal(t, st2web.APP_NAME, st2db.APP_NAME)
-	// assert.Equal(t, st2web.APP_NAME, "Not_test_now")
+	// assert.Equal(t, st2web.AppVersion, "10.12")
+	// assert.Equal(t, st2web.AppVersion, st2db.AppVersion)
+	// assert.Equal(t, st2web.AppName, st2db.AppName)
+	// assert.Equal(t, st2web.AppName, "Not_test_now")
 
 	// //Case 3
 	// assert.Equal(t, res3.StatusCode, 200)
 	// assert.Equal(t, int(st3db.Model.ID), 3)
-	// assert.Equal(t, st3web.SAY, "You cannot update UPDATE_DATE")
+	// assert.Equal(t, st3web.SAY, "You cannot update UpdateDate")
 }
 **/

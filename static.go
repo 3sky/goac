@@ -2,39 +2,40 @@ package main
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 	"os"
-	"log"
 )
 
-
+//PageData - Data for table in HTML
 type PageData struct {
 	PageTitle string
-	OneApp []StatusStruct
+	OneApp    []StatusStruct
 }
 
-
-func (pg *PageData) AddItem(item StatusStruct) []StatusStruct{
+//AddItem - Add item to PageData struct
+func (pg *PageData) AddItem(item StatusStruct) []StatusStruct {
 	pg.OneApp = append(pg.OneApp, item)
-	return pg.OneApp 
+	return pg.OneApp
 }
 
-func (a *App) DisplayHtml(w http.ResponseWriter, r *http.Request) {
-	
+// DisplayHTML - Display HTML
+func (a *App) DisplayHTML(w http.ResponseWriter, r *http.Request) {
+
 	var tmp StatusStruct
-	
+
 	AppData := []StatusStruct{}
 
 	data := PageData{
 		PageTitle: "Hello There!",
-		OneApp: AppData,
+		OneApp:    AppData,
 	}
 
-	all_ids, err := a.GetAllID()
+	allIds, err := a.GetAllID()
 	if err != nil {
 		log.Printf("Cannot get all IDs from DB: %v", err)
 	}
-	for _, i := range all_ids {
+	for _, i := range allIds {
 		tmp, err = a.SelectFromDBWhereID(int64(i))
 		if err != nil {
 			log.Printf("Cannot get row from DB: %v", err)
@@ -46,7 +47,7 @@ func (a *App) DisplayHtml(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error while get path: %v", err)
 	}
-	
+
 	tmpl := template.Must(template.ParseFiles(p + "/hello.html"))
 	tmpl.Execute(w, data)
 }

@@ -1,30 +1,31 @@
 package main
 
 import (
-
+	"log"
 	"net/http"
 	"os"
-	"log"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-
-
 )
+
+//User BasicAuth User
 type User struct {
-	username  string
-	password  string
+	username string
+	password string
 }
 
+//App - it's app
 type App struct {
-    Router *mux.Router
-    DB     *gorm.DB
+	Router *mux.Router
+	DB     *gorm.DB
 }
 
+//Initialize - initialize App
 func (a *App) Initialize(dbname string) {
 
-    var err error
+	var err error
 	a.DB, err = gorm.Open("sqlite3", dbname)
 	if err != nil {
 		log.Fatalf("Cannot open main DB %v", err)
@@ -34,10 +35,11 @@ func (a *App) Initialize(dbname string) {
 	if err != nil {
 		log.Fatalf("Cannot make schema migration: %v", err)
 	}
-    a.Router = mux.NewRouter()
-    a.initializeRoutes()
+	a.Router = mux.NewRouter()
+	a.initializeRoutes()
 }
 
+//Run - run app
 func (a *App) Run(addr string) {
 	loggedRouter := handlers.LoggingHandler(os.Stdout, a.Router)
 	http.ListenAndServe(addr, loggedRouter)
@@ -57,13 +59,6 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/api/app/{id}", use(a.UpdateData, p.basicAuth)).Methods("PUT")
 	a.Router.HandleFunc("/api/app/{id}", use(a.DeleteData, p.basicAuth)).Methods("DELETE")
 	a.Router.HandleFunc("/api/apps", use(a.DisplayAllApp, p.basicAuth)).Methods("GET")
-	a.Router.HandleFunc("/", a.DisplayHtml).Methods("GET")
+	a.Router.HandleFunc("/", a.DisplayHTML).Methods("GET")
 
 }
-
-
-// func CheckErr(err error) {
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
