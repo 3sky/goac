@@ -1,95 +1,122 @@
 package main
 
 import (
-	"time"
 
+	"time"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+
 )
 
-//StatusStruct struck directly from DB
 type StatusStruct struct {
 	gorm.Model
-	AppName     string    `main:"app_name"`
-	AppVersion  string    `main:"app_version"`
-	Environment string    `main:"environment"`
-	Branch      string    `main:"branch"`
-	UpdateDate  time.Time `main:"update_date"`
-	UpdateBy    string    `main:"update_by"`
+	APP_NAME string `main"app_name"` 
+	APP_VERSION string `main:"app_version"`
+	ENVIRONMENT string `main:"env"`
+	BRANCH string `main:"branch"`
+	UPDATE_DATE time.Time `main:"updated_date"`
+	UPDATE_BY string `main:"updated_by"`
 }
 
-//DeleteRowByID delete from DB
-func (a *App) DeleteRowByID(id int64) {
+
+func (a *App) DeleteRowByID(id int64) error {
 
 	var status StatusStruct
 
-	a.DB.First(&status, id)
-	a.DB.Delete(&status)
-}
-
-//UpdateSelectedColumn - Update Selected Column
-func (a *App) UpdateSelectedColumn(id int64, col, newVal string) {
-
-	var status StatusStruct
-
-	a.DB.First(&status, id)
-
-	if col == "AppName" {
-		a.DB.Model(&status).Update("app_name", newVal)
-	} else if col == "UpdateBy" {
-		a.DB.Model(&status).Update("update_by", newVal)
-	} else if col == "AppVersion" {
-		a.DB.Model(&status).Update("app_version", newVal)
-	} else if col == "Env" {
-		a.DB.Model(&status).Update("environment", newVal)
-	} else if col == "Branch" {
-		a.DB.Model(&status).Update("branch", newVal)
+	err := a.DB.First(&status, id).Error
+	if err != nil {
+		return err
 	}
 
+	err = a.DB.Delete(&status).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-//SelectFromDBWhereID - Select From DB Where ID
-func (a *App) SelectFromDBWhereID(id int64) StatusStruct {
+func (a *App) UpdateSelectedColumn(id int64, col, new_val string) error {
 
 	var status StatusStruct
 
-	a.DB.First(&status, id)
+	err := a.DB.First(&status, id).Error
+	if err != nil {
+		return err
+	}
 
-	return status
+	if col == "app_name" {
+		if err := a.DB.Model(&status).Update("APP_NAME", new_val).Error; err != nil {return err}
+	} else if col == "updated_by" {
+		if err := a.DB.Model(&status).Update("UPDATE_BY", new_val).Error; err != nil {return err}
+	} else if col == "app_version" {
+		if err := a.DB.Model(&status).Update("APP_VERSION", new_val).Error; err != nil {return err}
+	} else if col == "env" {
+		if err := a.DB.Model(&status).Update("ENVIRONMENT", new_val).Error; err != nil {return err}
+	} else if col == "branch" {
+		if err := a.DB.Model(&status).Update("BRANCH", new_val).Error; err != nil {return err}
+	}
 
+	return nil
 }
 
-//GetAllID - Get All ID
-func (a *App) GetAllID() []int {
+func (a *App) SelectFromDBWhereID(id int64) (StatusStruct, error) {
+	
+	var status StatusStruct
+	
+	err := a.DB.First(&status, id).Error 
+	
+	if err != nil {
+		return status, err
+	}
+
+	return status, nil
+	
+}
+
+func (a *App) GetAllID() ([]int, error) {
 
 	var statuses []StatusStruct
 	var ID []int
 
-	a.DB.Find(&statuses)
+	err := a.DB.Find(&statuses).Error
+	if err != nil {
+		return ID, err
+	} else {
+		for _, data := range statuses {
+			ID = append(ID, int(data.Model.ID))
+		}
+	}
+	
 
-	for _, data := range statuses {
-		ID = append(ID, int(data.Model.ID))
+	return ID, nil
+
+}
+
+func (a *App) InsertToDB(app, version, updater, env, branch string) error {
+
+	err := a.DB.Create(&StatusStruct{
+		APP_NAME: app, 
+		APP_VERSION: version, 
+		ENVIRONMENT: env,
+		BRANCH: branch,
+		UPDATE_DATE: time.Now(),
+		UPDATE_BY: updater}).Error
+	if err != nil {
+		return err
 	}
 
-	return ID
+	return nil
 
 }
 
-//InsertToDB - Insert To DB
-func (a *App) InsertToDB(app, version, updater, env, branch string) {
+func (a *App) MakeMigration() error {
 
-	a.DB.Create(&StatusStruct{
-		AppName:     app,
-		AppVersion:  version,
-		Environment: env,
-		Branch:      branch,
-		UpdateDate:  time.Now(),
-		UpdateBy:    updater})
+	err := a.DB.AutoMigrate(&StatusStruct{}).Error
+	if err != nil {
+		return err
+	}
 
+	return nil
 }
 
-//MakeMigration - Make Migration
-func (a *App) MakeMigration() {
-
-	a.DB.AutoMigrate(&StatusStruct{})
-}
