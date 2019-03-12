@@ -132,7 +132,7 @@ func (a *App) UpdateData(w http.ResponseWriter, r *http.Request) {
 				}
 
 				if len(app.UpdateBy) > 0 {
-					if err = a.UpdateSelectedColumn(int64(i), "updated_by", app.UpdateBy); err != nil {
+					if err = a.UpdateSelectedColumn(int64(i), "update_by", app.UpdateBy); err != nil {
 						log.Printf("Cannot update DB row: %v", err)
 					}
 				}
