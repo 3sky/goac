@@ -42,7 +42,18 @@ func (a *App) Initialize(dbname string) {
 //Run - run app
 func (a *App) Run(addr string) {
 	loggedRouter := handlers.LoggingHandler(os.Stdout, a.Router)
-	http.ListenAndServe(addr, loggedRouter)
+	/**
+	To use https change http.ListenAndServe -> http.ListenAndServeTLS
+
+	err := http.ListenAndServeTLS(addr, "server.pem", "server.key", loggedRouter)
+
+	And create server.pem and server.key
+	**/
+
+	err := http.ListenAndServe(addr, loggedRouter)
+	if err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
 	defer a.DB.Close()
 }
 
@@ -59,6 +70,6 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/api/app/{id}", use(a.UpdateData, p.basicAuth)).Methods("PUT")
 	a.Router.HandleFunc("/api/app/{id}", use(a.DeleteData, p.basicAuth)).Methods("DELETE")
 	a.Router.HandleFunc("/api/apps", use(a.DisplayAllApp, p.basicAuth)).Methods("GET")
-	a.Router.HandleFunc("/", a.DisplayHTML).Methods("GET")
-
+	a.Router.HandleFunc("/dev", a.DisplayHTMLDev).Methods("GET")
+	a.Router.HandleFunc("/stg", a.DisplayHTMLStg).Methods("GET")
 }

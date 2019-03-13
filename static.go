@@ -19,35 +19,66 @@ func (pg *PageData) AddItem(item StatusStruct) []StatusStruct {
 	return pg.OneApp
 }
 
-// DisplayHTML - Display HTML
-func (a *App) DisplayHTML(w http.ResponseWriter, r *http.Request) {
+// DisplayHTMLDev - Display HTML
+func (a *App) DisplayHTMLDev(w http.ResponseWriter, r *http.Request) {
+
+	var dev PageData
+
+	dev, path, err := a.preperHTML("dev")
+
+	if err != nil {
+		log.Printf("cannot get dev aplication from db: %v", err)
+	}
+
+	tmpl := template.Must(template.ParseFiles(path + "/hello.html"))
+	tmpl.Execute(w, dev)
+}
+
+// DisplayHTMLStg - Display HTML for stage
+func (a *App) DisplayHTMLStg(w http.ResponseWriter, r *http.Request) {
+
+	var stg PageData
+
+	stg, path, err := a.preperHTML("stg")
+
+	if err != nil {
+		log.Printf("cannot get dev aplication from db: %v", err)
+	}
+
+	tmpl := template.Must(template.ParseFiles(path + "/hello.html"))
+	tmpl.Execute(w, stg)
+}
+
+func (a *App) preperHTML(env string) (PageData, string, error) {
 
 	var tmp StatusStruct
 
-	AppData := []StatusStruct{}
+	appdata := []StatusStruct{}
 
 	data := PageData{
-		PageTitle: "Hello There!",
-		OneApp:    AppData,
+		PageTitle: "hello there!",
+		OneApp:    appdata,
 	}
 
-	allIds, err := a.GetAllID()
+	allids, err := a.GetAllID()
 	if err != nil {
-		log.Printf("Cannot get all IDs from DB: %v", err)
+		log.Printf("cannot get all ids from db: %v", err)
 	}
-	for _, i := range allIds {
+	for _, i := range allids {
 		tmp, err = a.SelectFromDBWhereID(int64(i))
 		if err != nil {
-			log.Printf("Cannot get row from DB: %v", err)
+			log.Printf("cannot get row from db: %v", err)
 		}
-		data.AddItem(tmp)
+		if tmp.Environment == env {
+			data.AddItem(tmp)
+		}
+
 	}
 
 	p, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error while get path: %v", err)
+		log.Printf("error while get path: %v", err)
 	}
 
-	tmpl := template.Must(template.ParseFiles(p + "/hello.html"))
-	tmpl.Execute(w, data)
+	return data, p, nil
 }
