@@ -56,7 +56,7 @@ func (a *App) preperHTML(env string) (PageData, string, error) {
 	appdata := []StatusStruct{}
 
 	data := PageData{
-		PageTitle: "hello there!",
+		PageTitle: "Hello There!",
 		OneApp:    appdata,
 	}
 

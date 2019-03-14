@@ -27,14 +27,17 @@ func TestApp(t *testing.T) {
 	router.HandleFunc("/api/app/{id}", a.UpdateData).Methods("PUT")
 	router.HandleFunc("/api/app/{id}", a.DeleteData).Methods("DELETE")
 	router.HandleFunc("/api/apps", a.DisplayAllApp).Methods("GET")
-	router.HandleFunc("/", a.DisplayHTML).Methods("GET")
+	router.HandleFunc("/dev", a.DisplayHTMLDev).Methods("GET")
+	router.HandleFunc("/stg", a.DisplayHTMLStg).Methods("GET")
+
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
 	url1 := ts.URL + "/hello"
 	url2 := ts.URL + "/api/app/" + "10"
 	url3 := ts.URL + "/api/apps"
-	url4 := ts.URL + "/"
+	url4 := ts.URL + "/dev"
+	url5 := ts.URL + "/stg"
 
 	resp1, err := http.Get(url1)
 	if err != nil {
@@ -56,6 +59,11 @@ func TestApp(t *testing.T) {
 		fmt.Printf("Error while make new GET Request: %v", err)
 	}
 
+	resp5, err := http.Get(url5)
+	if err != nil {
+		fmt.Printf("Error while make new GET Request: %v", err)
+	}
+
 	payload, err := json.Marshal(P)
 	if err != nil {
 		fmt.Printf("Error while marshall in TestAddNewApp: %v", err)
@@ -66,14 +74,15 @@ func TestApp(t *testing.T) {
 		fmt.Printf("Error while make new POST Request: %v", err)
 	}
 
-	resp5 := httptest.NewRecorder()
+	resp6 := httptest.NewRecorder()
 
-	a.AddNewApp(resp5, req)
+	a.AddNewApp(resp6, req)
 
 	assert.Equal(t, 200, resp1.StatusCode)
 	assert.Equal(t, 200, resp2.StatusCode)
 	assert.Equal(t, 200, resp3.StatusCode)
 	assert.Equal(t, 200, resp4.StatusCode)
-	assert.Equal(t, 200, resp5.Code)
+	assert.Equal(t, 200, resp5.StatusCode)
+	assert.Equal(t, 200, resp6.Code)
 
 }
