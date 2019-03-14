@@ -301,132 +301,66 @@ func TestDisplayAllApp(t *testing.T) {
 
 }
 
-/** at this moment test doesn't work PUT Method test
-func TestDeleteData(t *testing.T) {
+func TestUpdateData(t *testing.T) {
 
+	var data interface{}
 
-	var h1 HelloStruct
+	a := createTestDBConnection()
+	defer a.DB.Close()
 
-	r := mux.NewRouter()
-	r.HandleFunc("/api/app/{id}", DisplaAppByID).Methods("DELETE")
+	var st1 StatusStruct
+	U1 := &AppStatusStruct{
+		AppName:  "SomeApp",
+		UpdateBy: "test3",
+	}
 
-    ts := httptest.NewServer(r)
-    defer ts.Close()
-
-	req, err := http.NewRequest("DELETE", "1", nil)
-	w := httptest.NewRecorder()
-
-	DeleteData(w, req)
-
-	resp := w.Result()
-
-
-	_ = json.NewDecoder(resp.Body).Decode(&h1)
-
-
-	fmt.Println(h1)
-
-}
-**/
-
-/** at this moment test doesn't work PUT Method test
-func TestUpdateData(t * testing.T) {
-
-	//var st1web, st1db db.StatusStruct
-	var st1web db.StatusStruct
-	// var st2web, st2db db.StatusStruct
-	// var st3db db.StatusStruct
-	// var st3web HelloStruct
-
-	//p2 := []byte(`{"AppName": "2.0" }`)
-	p1 := []byte(`{"AppName": "Not_test_now", "AppVersion": "10.12"`)
-	// p3 := []byte(`{"AppName": "API Proxy Newier", "AppVersion": "1.2", "updated_by": "Kuba 2" }`)
+	jsonU1, err := json.Marshal(U1)
+	if err != nil {
+		fmt.Printf("Error while marshall in TestUpdateData: %v", err)
+	}
 
 	r := mux.NewRouter()
 	ts := httptest.NewServer(r)
 	client := &http.Client{}
-	url1 := ts.URL + "/api/app/1"
-	req1, _ := http.NewRequest("PUT", url1, bytes.NewBuffer(p1))
-
-
+	url := ts.URL + "/api/app/1"
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonU1))
+	if err != nil {
+		fmt.Printf("error while create PUT request %s", err)
+	}
 
 	defer ts.Close()
 
-	res1, err := client.Do(req1)
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("error while make PUT request: %s", err)
+	}
 
+	err = json.NewDecoder(res.Body).Decode(&data)
+	if err != nil {
+		fmt.Printf("Error while decode in TestUpdateData: %v", err)
+	}
 
-    //eq1, _ := http.NewRequest("PUT", "http://127.0.0.1:5000/api/app/1", bytes.NewBuffer(p1))
-	//res1 := httptest.NewRecorder()
-	//handler := http.HandlerFunc(UpdateData)
+	fmt.Printf("Response: %v \n", data)
+	//req := httptest.NewRequest("PUT", "http://127.0.0.1:5000/api/app/1", bytes.NewBuffer(jsonU1))
+	//if err != nil {
+	//	fmt.Printf("Error while make new PUT Request: %v", err)
+	//}
 
-	//handler.ServeHTTP(res1, req1)
+	//res := httptest.NewRecorder()
 
-	fmt.Printf("from DB - %+v\n", res1)
-	fmt.Printf("from DB - %+v\n", req1)
-	//UpdateData(res1, req1)
+	st1, err = a.SelectFromDBWhereID(int64(1))
+	if err != nil {
+		fmt.Printf("Error with get row in TestUpdateData: %v \n", err)
+	}
+	fmt.Printf("Row befor update %v \n", st1)
 
+	// NOT WORK
+	//a.UpdateData(res, req)
 
-	fmt.Printf("from DB - %+v\n", res1.Body)
+	st1, err = a.SelectFromDBWhereID(int64(1))
+	if err != nil {
+		fmt.Printf("Error with get row in TestUpdateData: %v \n", err)
+	}
+	fmt.Printf("Row after update %v \n", st1)
 
-    //json.Unmarshal(res1.Body.Bytes(), &st1web)
-	// _ = json.NewDecoder(res1.Body).Decode(&st1web)
-	fmt.Printf("from WEB - %+v\n", st1web)
-
-
-	// jsonP1, _ := json.Marshal(P1)
-	// jsonP2, _ := json.Marshal(P2)
-	// jsonP3, _ := json.Marshal(P3)
-
-	// req1, _ := http.NewRequest("PUT", "http://127.0.0.1:5000/api/app/1", bytes.NewBuffer(jsonP1))
-
-	// req2, _ := http.NewRequest("PUT", "http://127.0.0.1:5000/api/app/2", bytes.NewBuffer(jsonP2))
-	// req3, _ := http.NewRequest("PUT", "http://127.0.0.1:5000/api/app/3", bytes.NewBuffer(jsonP3))
-
-	// w1 := httptest.NewRecorder()
-	// w2 := httptest.NewRecorder()
-	// w3 := httptest.NewRecorder()
-
-	// UpdateData(w1, req1)
-	// UpdateData(w2, req2)
-	// UpdateData(w3, req3)
-
-	// res1 := w1.Result()
-	// res2 := w2.Result()
-	// res3 := w3.Result()
-
-	// _ = json.NewDecoder(res1.Body).Decode(&st1web)
-	// _ = json.NewDecoder(res2.Body).Decode(&st2web)
-	// _ = json.NewDecoder(res3.Body).Decode(&st3web)
-
-	// st1db = db.SelectFromDBWhereID(int64(1))
-	// st2db = db.SelectFromDBWhereID(int64(2))
-
-	// fmt.Printf("from DB - %+v\n", st1db)
-	// //fmt.Printf("from DB - %+v\n", st2db)
-	// //fmt.Printf("from DB - %+v\n", st3db)
-	// fmt.Printf("from WEB - %+v\n", st1web)
-	// // fmt.Printf("%+v\n", st2web)
-	// // fmt.Printf("%+v\n", st3web)
-	// //Case 1
-	// assert.Equal(t, res1.StatusCode, 200)
-	// assert.Equal(t, int(st1web.Model.ID), 1)
-	// assert.Equal(t, st1web.Model.ID, st1db.Model.ID)
-	// assert.Equal(t, st1web.AppVersion, "2.0")
-	// assert.Equal(t, st1web.AppVersion, st1db.AppVersion)
-	// assert.Equal(t, st1web.AppName, st1db.AppName)
-
-	// //Case 2
-	// assert.Equal(t, res2.StatusCode, 200)
-	// assert.Equal(t, int(st2web.Model.ID), 2)
-	// assert.Equal(t, st2web.Model.ID, st2db.Model.ID)
-	// assert.Equal(t, st2web.AppVersion, "10.12")
-	// assert.Equal(t, st2web.AppVersion, st2db.AppVersion)
-	// assert.Equal(t, st2web.AppName, st2db.AppName)
-	// assert.Equal(t, st2web.AppName, "Not_test_now")
-
-	// //Case 3
-	// assert.Equal(t, res3.StatusCode, 200)
-	// assert.Equal(t, int(st3db.Model.ID), 3)
-	// assert.Equal(t, st3web.SAY, "You cannot update UpdateDate")
 }
-**/
