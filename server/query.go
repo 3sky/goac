@@ -71,6 +71,21 @@ func (a *App) UpdateSelectedColumn(id int64, col, newVal string) error {
 	return nil
 }
 
+//UpdateCurrentDate - updating date for current while update row
+func (a *App) UpdateCurrentDate(id int64) error {
+
+	var status StatusStruct
+
+	err := a.DB.First(&status, id).Error
+	if err != nil {
+		return err
+	}
+	if err := a.DB.Model(&status).Update("update_date", time.Now()).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 //SelectFromDBWhereID - Select row from DB
 func (a *App) SelectFromDBWhereID(id int64) (StatusStruct, error) {
 

@@ -303,15 +303,18 @@ func TestDisplayAllApp(t *testing.T) {
 
 func TestUpdateData(t *testing.T) {
 
-	var data interface{}
-
 	a := createTestDBConnection()
 	defer a.DB.Close()
 
-	var st1 StatusStruct
+	var st1, st2 StatusStruct
 	U1 := &AppStatusStruct{
 		AppName:  "SomeApp",
 		UpdateBy: "test3",
+	}
+
+	U2 := &AppStatusStruct{
+		AppVersion:  "1.11",
+		Environment: "stg",
 	}
 
 	jsonU1, err := json.Marshal(U1)
@@ -319,48 +322,105 @@ func TestUpdateData(t *testing.T) {
 		fmt.Printf("Error while marshall in TestUpdateData: %v", err)
 	}
 
-	r := mux.NewRouter()
-	ts := httptest.NewServer(r)
-	client := &http.Client{}
-	url := ts.URL + "/api/app/1"
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonU1))
+	jsonU2, err := json.Marshal(U2)
 	if err != nil {
-		fmt.Printf("error while create PUT request %s", err)
+		fmt.Printf("Error while marshall in TestUpdateData: %v", err)
 	}
+
+	st1, err = a.SelectFromDBWhereID(int64(1))
+	if err != nil {
+		fmt.Printf("Error with get row in TestUpdateData: %v \n", err)
+	}
+
+	st2, err = a.SelectFromDBWhereID(int64(2))
+	if err != nil {
+		fmt.Printf("Error with get row in TestUpdateData: %v \n", err)
+	}
+
+	r := mux.NewRouter()
+	r.HandleFunc("/api/app/{id}", a.UpdateData).Methods("PUT")
+	client := &http.Client{}
+	ts := httptest.NewServer(r)
 
 	defer ts.Close()
 
-	res, err := client.Do(req)
+	url1 := ts.URL + "/api/app/" + "1"
+	url2 := ts.URL + "/api/app/" + "2"
+
+	req1, err := http.NewRequest("PUT", url1, bytes.NewBuffer(jsonU1))
+	req1.Header.Set("Content-Type", "application/json")
 	if err != nil {
-		fmt.Printf("error while make PUT request: %s", err)
+		fmt.Printf("Error while making PUT Req in TestUpdateData: %v \n", err)
 	}
 
-	err = json.NewDecoder(res.Body).Decode(&data)
+	req2, err := http.NewRequest("PUT", url2, bytes.NewBuffer(jsonU2))
+	req2.Header.Set("Content-Type", "application/json")
 	if err != nil {
-		fmt.Printf("Error while decode in TestUpdateData: %v", err)
+		fmt.Printf("Error while making PUT Req in TestUpdateData: %v \n", err)
 	}
 
-	fmt.Printf("Response: %v \n", data)
-	//req := httptest.NewRequest("PUT", "http://127.0.0.1:5000/api/app/1", bytes.NewBuffer(jsonU1))
-	//if err != nil {
-	//	fmt.Printf("Error while make new PUT Request: %v", err)
-	//}
+	res1, err := client.Do(req1)
+	if err != nil {
+		fmt.Printf("Error while making PUT Req in TestUpdateData: %v \n", err)
+	}
+	defer res1.Body.Close()
 
-	//res := httptest.NewRecorder()
+	res2, err := client.Do(req2)
+	if err != nil {
+		fmt.Printf("Error while making PUT Req in TestUpdateData: %v \n", err)
+	}
+	defer res2.Body.Close()
 
 	st1, err = a.SelectFromDBWhereID(int64(1))
 	if err != nil {
 		fmt.Printf("Error with get row in TestUpdateData: %v \n", err)
 	}
-	fmt.Printf("Row befor update %v \n", st1)
 
-	// NOT WORK
-	//a.UpdateData(res, req)
-
-	st1, err = a.SelectFromDBWhereID(int64(1))
+	st2, err = a.SelectFromDBWhereID(int64(2))
 	if err != nil {
 		fmt.Printf("Error with get row in TestUpdateData: %v \n", err)
 	}
-	fmt.Printf("Row after update %v \n", st1)
 
+	assert.Equal(t, 1, int(st1.ID))
+	assert.Equal(t, "SomeApp", st1.AppName)
+	assert.Equal(t, "1", st1.AppVersion)
+	assert.Equal(t, "dev", st1.Environment)
+	assert.Equal(t, "test3", st1.UpdateBy)
+
+	assert.Equal(t, 2, int(st2.ID))
+	assert.Equal(t, "Test_run_app_2", st2.AppName)
+	assert.Equal(t, "1.11", st2.AppVersion)
+	assert.Equal(t, "stg", st2.Environment)
+	assert.Equal(t, "UnitTest_2", st2.UpdateBy)
+
+}
+
+func TestDeleteData(t *testing.T) {
+
+	a := createTestDBConnection()
+	defer a.DB.Close()
+
+	r := mux.NewRouter()
+	r.HandleFunc("/api/app/{id}", a.DeleteData).Methods("DELETE")
+	client := &http.Client{}
+	ts := httptest.NewServer(r)
+
+	defer ts.Close()
+
+	url1 := ts.URL + "/api/app/" + "1"
+
+	req1, err := http.NewRequest("DELETE", url1, nil)
+	if err != nil {
+		fmt.Printf("Error while making PUT Req in TestUpdateData: %v \n", err)
+	}
+
+	res1, err := client.Do(req1)
+	if err != nil {
+		fmt.Printf("Error while making PUT Req in TestUpdateData: %v \n", err)
+	}
+	defer res1.Body.Close()
+
+	_, err = a.SelectFromDBWhereID(int64(1))
+
+	assert.Contains(t, err.Error(), "record not found")
 }

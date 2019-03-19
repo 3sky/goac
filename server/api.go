@@ -54,7 +54,7 @@ func (a *App) DisplayAppByID(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Cannot get all IDs from DB: %v", err)
 		}
 
-		if Ifcontains(allIds, i) {
+		if Ifcontains(allIds, int64(i)) {
 			var app interface{}
 			tmp, err := a.SelectFromDBWhereID(int64(i))
 			if err != nil {
@@ -108,8 +108,8 @@ func (a *App) UpdateData(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id := vars["id"]
-	i, err := strconv.Atoi(id)
 
+	i, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		errorWithNonDigit(w, err)
 	} else {
@@ -154,7 +154,10 @@ func (a *App) UpdateData(w http.ResponseWriter, r *http.Request) {
 						log.Printf("Cannot update DB row: %v", err)
 					}
 				}
-
+				err := a.UpdateCurrentDate(int64(i))
+				if err != nil {
+					log.Printf("Cannot update insert time : %v", err)
+				}
 				var appAfterUpdate interface{}
 				tmp, err := a.SelectFromDBWhereID(int64(i))
 				if err != nil {
@@ -177,8 +180,6 @@ func (a *App) UpdateData(w http.ResponseWriter, r *http.Request) {
 // DeleteData - Delete app (DELETE)
 func (a *App) DeleteData(w http.ResponseWriter, r *http.Request) {
 
-	var app AppStatusStruct
-
 	vars := mux.Vars(r)
 	id := vars["id"]
 	i, err := strconv.Atoi(id)
@@ -192,19 +193,13 @@ func (a *App) DeleteData(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Cannot get all IDs from DB: %v", err)
 		}
 
-		if Ifcontains(allIds, i) {
-
-			err = json.NewDecoder(r.Body).Decode(&app)
+		if Ifcontains(allIds, int64(i)) {
+			err = a.DeleteRowByID(int64(i))
 			if err != nil {
-				errorWhileDecode(w, err)
-			} else {
-				err = a.DeleteRowByID(int64(i))
-				if err != nil {
-					log.Printf("Cannot delete row from DB: %v", err)
-				}
-				h := &HelloStruct{ID: i, Say: "Record was deleted successfully !"}
-				json.NewEncoder(w).Encode(h)
+				log.Printf("Cannot delete row from DB: %v", err)
 			}
+			h := &HelloStruct{ID: i, Say: "Record was deleted successfully !"}
+			json.NewEncoder(w).Encode(h)
 		} else {
 			h := &HelloStruct{ID: i, Say: "No app with given ID"}
 			json.NewEncoder(w).Encode(h)
@@ -263,9 +258,9 @@ func GetAppStatusStructFromStatusStruct(s *StatusStruct) *AppStatusStruct {
 }
 
 // Ifcontains - check if list contain ID
-func Ifcontains(s []int, e int) bool {
+func Ifcontains(s []int, e int64) bool {
 	for _, a := range s {
-		if a == e {
+		if int64(a) == e {
 			return true
 		}
 	}

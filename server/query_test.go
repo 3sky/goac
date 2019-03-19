@@ -100,7 +100,7 @@ func TestGetAllID(t *testing.T) {
 		fmt.Printf("Cannot get All IDs from TestGetAllID: %v", err)
 	}
 
-	assert.Len(t, IDs, 8)
+	assert.Len(t, IDs, 7)
 
 }
 
