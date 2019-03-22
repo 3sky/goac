@@ -7,20 +7,22 @@ import (
 )
 
 //StatusStruct - data from DB
+/**
 type StatusStruct struct {
 	ID          int       `main:"id"`
 	AppName     string    `main:"app_name"`
 	AppVersion  string    `main:"app_version"`
 	Environment string    `main:"environment"`
 	Branch      string    `main:"branch"`
+	IP          string    `main:"ip"`
 	UpdateDate  time.Time `main:"update_date"`
 	UpdateBy    string    `main:"update_by"`
 }
-
+**/
 //DeleteRowByID - Delete row
 func (a *App) DeleteRowByID(id int64) error {
 
-	var status StatusStruct
+	var status AppStatusStruct
 
 	err := a.DB.First(&status, id).Error
 	if err != nil {
@@ -38,7 +40,7 @@ func (a *App) DeleteRowByID(id int64) error {
 //UpdateSelectedColumn - Update column
 func (a *App) UpdateSelectedColumn(id int64, col, newVal string) error {
 
-	var status StatusStruct
+	var status AppStatusStruct
 
 	err := a.DB.First(&status, id).Error
 	if err != nil {
@@ -73,22 +75,22 @@ func (a *App) UpdateSelectedColumn(id int64, col, newVal string) error {
 //UpdateCurrentDate - updating date for current while update row
 func (a *App) UpdateCurrentDate(id int64) error {
 
-	var status StatusStruct
+	var status AppStatusStruct
 
 	err := a.DB.First(&status, id).Error
 	if err != nil {
 		return err
 	}
-	if err := a.DB.Model(&status).Update("update_date", time.Now()).Error; err != nil {
+	if err := a.DB.Model(&status).Update("update_date", time.Now().Format("2006-01-02 15:04:05")).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 //SelectFromDBWhereID - Select row from DB
-func (a *App) SelectFromDBWhereID(id int64) (StatusStruct, error) {
+func (a *App) SelectFromDBWhereID(id int64) (AppStatusStruct, error) {
 
-	var status StatusStruct
+	var status AppStatusStruct
 
 	err := a.DB.First(&status, id).Error
 
@@ -103,7 +105,7 @@ func (a *App) SelectFromDBWhereID(id int64) (StatusStruct, error) {
 //GetAllID - Get all IDs frm DB
 func (a *App) GetAllID() ([]int, error) {
 
-	var statuses []StatusStruct
+	var statuses []AppStatusStruct
 	var ID []int
 
 	err := a.DB.Find(&statuses).Error
@@ -120,15 +122,17 @@ func (a *App) GetAllID() ([]int, error) {
 }
 
 //InsertToDB - Insert Data to DB
-func (a *App) InsertToDB(app, version, updater, Environment, Branch string) error {
+func (a *App) InsertToDB(app, version, updater, Environment, Branch, IP string) error {
 
-	err := a.DB.Create(&StatusStruct{
+	err := a.DB.Create(&AppStatusStruct{
 		AppName:     app,
 		AppVersion:  version,
 		Environment: Environment,
 		Branch:      Branch,
-		UpdateDate:  time.Now(),
-		UpdateBy:    updater}).Error
+		IP:          IP,
+		//UpdateDate:  time.Now(),
+		UpdateDate: time.Now().Format("2006-01-02 15:04:05"),
+		UpdateBy:   updater}).Error
 	if err != nil {
 		return err
 	}
@@ -138,9 +142,9 @@ func (a *App) InsertToDB(app, version, updater, Environment, Branch string) erro
 }
 
 //SearchInDB - search app information with name and environment
-func (a *App) SearchInDB(app, env string) (StatusStruct, error) {
+func (a *App) SearchInDB(app, env string) (AppStatusStruct, error) {
 
-	var status StatusStruct
+	var status AppStatusStruct
 
 	err := a.DB.Where("app_name = ? AND environment = ?", app, env).Find(&status).Error
 
@@ -155,7 +159,7 @@ func (a *App) SearchInDB(app, env string) (StatusStruct, error) {
 //MakeMigration - Make schema migration
 func (a *App) MakeMigration() error {
 
-	err := a.DB.AutoMigrate(&StatusStruct{}).Error
+	err := a.DB.AutoMigrate(&AppStatusStruct{}).Error
 	if err != nil {
 		return err
 	}

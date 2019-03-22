@@ -44,7 +44,7 @@ App contains basic http auth with `3sky:test` hardcoded in app.go, feel free to 
 - Add new app
 
   ```commandline
-  curl -i -H "Content-Type: application/json" -X POST -d '{"app_name": "Some App", "app_version": "2.123", "update_by": "Kuba", "environment": "dev", "branch": "hotfix"}' http://127.0.0.1:5000/api/app/new
+  curl -s -H "Content-Type: application/json" -X POST -d '{"app_name": "etl3-user-panel", "app_version": "2.123", "update_by": "Kuba", "environment": "stg", "IP": "10.12.176.14", "branch": "hotfix"}' http://127.0.0.1:5000/api/app/new
   ```
 
 - Update data

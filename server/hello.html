@@ -27,18 +27,20 @@ tr:nth-child(even) {
       <th>App Version</th> 
       <th>Environment</th> 
       <th>Branch</th> 
+      <th>Node IP</th> 
       <th>Updated Date</th>
       <th>Updated By</th>
     </tr>
     {{range .OneApp}}
     <tr>
-        <td>{{ .ID }} </td>
-        <td>{{ .AppName }} </td>
-        <td>{{ .AppVersion }} </td>
-        <td>{{ .Environment }} </td>
-        <td>{{ .Branch }} </td>
-        <td>{{ .UpdateDate.Format "Jan 02, 2006 15:04:05 UTC" }} </td>
-        <td>{{ .UpdateBy }} </td>  
+        <td>{{ .ID }}</td>
+        <td>{{ .AppName }}</td>
+        <td>{{ .AppVersion }}</td>
+        <td>{{ .Environment }}</td>
+        <td>{{ .Branch }}</td>
+        <td>{{ .IP }}</td>
+        <td>{{ .UpdateDate }}</td>
+        <td>{{ .UpdateBy }}</td>  
     </tr>
     {{end}}
 </table>

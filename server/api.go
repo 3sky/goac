@@ -22,6 +22,7 @@ type AppStatusStruct struct {
 	AppVersion  string `json:"app_version"`
 	Environment string `json:"environment"`
 	Branch      string `json:"branch"`
+	IP          string `json:"ip"`
 	UpdateDate  string `json:"update_date"`
 	UpdateBy    string `json:"update_by"`
 }
@@ -55,13 +56,13 @@ func (a *App) DisplayAppByID(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if Ifcontains(allIds, int64(i)) {
-			var app interface{}
+			//var app interface{}
 			tmp, err := a.SelectFromDBWhereID(int64(i))
 			if err != nil {
 				log.Printf("Cannot get row from DB: %v", err)
 			}
-			app = GetAppStatusStructFromStatusStruct(&tmp)
-			json.NewEncoder(w).Encode(app)
+			//app = GetAppStatusStructFromStatusStruct(&tmp)
+			json.NewEncoder(w).Encode(tmp)
 		} else {
 			h := &HelloStruct{ID: i, Say: "No app with given ID"}
 			json.NewEncoder(w).Encode(h)
@@ -89,13 +90,13 @@ func (a *App) AddNewApp(w http.ResponseWriter, r *http.Request) {
 				updater = app.UpdateBy
 			}
 
-			err = a.InsertToDB(app.AppName, app.AppVersion, updater, app.Environment, app.Branch)
+			err = a.InsertToDB(app.AppName, app.AppVersion, updater, app.Environment, app.Branch, app.IP)
 			if err != nil {
 				log.Printf("Cannot insert row into DB: %v", err)
 			}
 
 		} else {
-			h := &HelloStruct{Say: "App with this name on this environment exist! "}
+			h := &HelloStruct{Say: "This app already exits on this environment! "}
 			json.NewEncoder(w).Encode(h)
 		}
 	}
@@ -118,8 +119,8 @@ func (a *App) SearchApp(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Error while searching app: %v", err)
 			}
 
-			app = GetAppStatusStructFromStatusStruct(&tmp)
-			json.NewEncoder(w).Encode(app)
+			//app = GetAppStatusStructFromStatusStruct(&tmp)
+			json.NewEncoder(w).Encode(tmp)
 
 		} else {
 			h := &HelloStruct{Say: "Application name and environment are mandatory ! "}
@@ -176,6 +177,11 @@ func (a *App) UpdateData(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 
+				if len(app.IP) > 0 {
+					if err = a.UpdateSelectedColumn(int64(i), "ip", app.IP); err != nil {
+						log.Printf("Cannot update DB row: %v", err)
+					}
+				}
 				if len(app.Branch) > 0 {
 					if err = a.UpdateSelectedColumn(int64(i), "branch", app.Branch); err != nil {
 						log.Printf("Cannot update DB row: %v", err)
@@ -185,13 +191,13 @@ func (a *App) UpdateData(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					log.Printf("Cannot update insert time : %v", err)
 				}
-				var appAfterUpdate interface{}
+				//var appAfterUpdate interface{}
 				tmp, err := a.SelectFromDBWhereID(int64(i))
 				if err != nil {
 					log.Printf("Cannot get row from DB: %v", err)
 				}
-				appAfterUpdate = GetAppStatusStructFromStatusStruct(&tmp)
-				json.NewEncoder(w).Encode(appAfterUpdate)
+				//appAfterUpdate = GetAppStatusStructFromStatusStruct(&tmp)
+				json.NewEncoder(w).Encode(tmp)
 
 			}
 
@@ -238,8 +244,6 @@ func (a *App) DeleteData(w http.ResponseWriter, r *http.Request) {
 // DisplayAllApp - Display all app (GET)
 func (a *App) DisplayAllApp(w http.ResponseWriter, r *http.Request) {
 
-	var app *AppStatusStruct
-
 	Apps := []AppStatusStruct{}
 
 	data := AllApp{
@@ -257,8 +261,7 @@ func (a *App) DisplayAllApp(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("Cannot get row from DB: %v", err)
 		}
-		app = GetAppStatusStructFromStatusStruct(&tmp)
-		data.AddApp(app)
+		data.AddApp(&tmp)
 	}
 	json.NewEncoder(w).Encode(data)
 }
@@ -271,18 +274,22 @@ func (aa *AllApp) AddApp(app *AppStatusStruct) []AppStatusStruct {
 }
 
 // GetAppStatusStructFromStatusStruct - Convert StatusStruct to AppStruct
-func GetAppStatusStructFromStatusStruct(s *StatusStruct) *AppStatusStruct {
+/**
+func GetAppStatusStructFromStatusStruct(s *AppStatusStruct) *AppStatusStruct {
 	s2 := &AppStatusStruct{
 		ID:          s.ID,
 		AppName:     s.AppName,
 		AppVersion:  s.AppVersion,
 		Environment: s.Environment,
 		Branch:      s.Branch,
-		UpdateDate:  s.UpdateDate.Format("2006-01-02 15:04:05"),
-		UpdateBy:    s.UpdateBy,
+		IP:          s.IP,
+		//UpdateDate:  s.UpdateDate.Format("2006-01-02 15:04:05"),
+		UpdateDate: s.UpdateDate,
+		UpdateBy:   s.UpdateBy,
 	}
 	return s2
 }
+**/
 
 // Ifcontains - check if list contain ID
 func Ifcontains(s []int, e int64) bool {

@@ -10,11 +10,11 @@ import (
 //PageData - Data for table in HTML
 type PageData struct {
 	PageTitle string
-	OneApp    []StatusStruct
+	OneApp    []AppStatusStruct
 }
 
 //AddItem - Add item to PageData struct
-func (pg *PageData) AddItem(item StatusStruct) []StatusStruct {
+func (pg *PageData) AddItem(item AppStatusStruct) []AppStatusStruct {
 	pg.OneApp = append(pg.OneApp, item)
 	return pg.OneApp
 }
@@ -51,9 +51,9 @@ func (a *App) DisplayHTMLStg(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) preperHTML(env string) (PageData, string, error) {
 
-	var tmp StatusStruct
+	var tmp AppStatusStruct
 
-	appdata := []StatusStruct{}
+	appdata := []AppStatusStruct{}
 
 	data := PageData{
 		PageTitle: "Hello There!",
