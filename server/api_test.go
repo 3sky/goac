@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,7 +29,7 @@ func TestIfcontains(t *testing.T) {
 func TestGetAppStatusStructFromStatusStruct(t *testing.T) {
 
 	h := &StatusStruct{
-		Model:       gorm.Model{ID: 1},
+		ID:          1,
 		AppName:     "Test",
 		AppVersion:  "1",
 		UpdateDate:  time.Now(),
@@ -234,7 +233,7 @@ func TestAddNewApp(t *testing.T) {
 	}
 
 	assert.Equal(t, 200, res1.Code)
-	assert.Equal(t, 3, int(st1.Model.ID))
+	assert.Equal(t, 3, st1.ID)
 	assert.Equal(t, "New_app", st1.AppName)
 	assert.Equal(t, "1.01", st1.AppVersion)
 	assert.Equal(t, "test1", st1.UpdateBy)
@@ -242,7 +241,7 @@ func TestAddNewApp(t *testing.T) {
 	assert.Equal(t, "testing", st1.Branch)
 
 	assert.Equal(t, 200, res2.Code)
-	assert.Equal(t, 4, int(st2.Model.ID))
+	assert.Equal(t, 4, st2.ID)
 	assert.Equal(t, "New_app_2", st2.AppName)
 	assert.Equal(t, "11.1", st2.AppVersion)
 	assert.Equal(t, "random guy", st2.UpdateBy)

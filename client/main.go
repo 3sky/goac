@@ -77,7 +77,8 @@ func main() {
 		ins.promoteApp()
 	}
 
-	cfg.GetApp(*appIDPtr)
+	cfg.InsertApp(ins)
+	//cfg.GetApp(*appIDPtr)
 }
 
 func (i *Insert) promoteApp() {

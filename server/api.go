@@ -17,7 +17,7 @@ type HelloStruct struct {
 
 // AppStatusStruct - Similar struct to db.StatusStruct, but without gorm.Model
 type AppStatusStruct struct {
-	ID          uint
+	ID          int    `json:"id"`
 	AppName     string `json:"app_name"`
 	AppVersion  string `json:"app_version"`
 	Environment string `json:"environment"`
@@ -81,7 +81,7 @@ func (a *App) AddNewApp(w http.ResponseWriter, r *http.Request) {
 		errorWhileDecode(w, err)
 	} else {
 
-		if (len(app.AppName) != 0) && (len(app.AppVersion) != 0) {
+		if a.validateInsert(app.AppName, app.Environment) {
 
 			if len(app.UpdateBy) == 0 {
 				updater = "random guy"
@@ -95,7 +95,34 @@ func (a *App) AddNewApp(w http.ResponseWriter, r *http.Request) {
 			}
 
 		} else {
-			h := &HelloStruct{Say: "Application name and version are mandatory ! "}
+			h := &HelloStruct{Say: "App with this name on this environment exist! "}
+			json.NewEncoder(w).Encode(h)
+		}
+	}
+}
+
+//SearchApp - search app with name
+func (a *App) SearchApp(w http.ResponseWriter, r *http.Request) {
+
+	var app *AppStatusStruct
+
+	err := json.NewDecoder(r.Body).Decode(&app)
+	if err != nil {
+		errorWhileDecode(w, err)
+	} else {
+
+		if (len(app.AppName) != 0) && (len(app.Environment) != 0) {
+
+			tmp, err := a.SearchInDB(app.AppName, app.Environment)
+			if err != nil {
+				log.Printf("Error while searching app: %v", err)
+			}
+
+			app = GetAppStatusStructFromStatusStruct(&tmp)
+			json.NewEncoder(w).Encode(app)
+
+		} else {
+			h := &HelloStruct{Say: "Application name and environment are mandatory ! "}
 			json.NewEncoder(w).Encode(h)
 		}
 	}
@@ -246,7 +273,7 @@ func (aa *AllApp) AddApp(app *AppStatusStruct) []AppStatusStruct {
 // GetAppStatusStructFromStatusStruct - Convert StatusStruct to AppStruct
 func GetAppStatusStructFromStatusStruct(s *StatusStruct) *AppStatusStruct {
 	s2 := &AppStatusStruct{
-		ID:          s.Model.ID,
+		ID:          s.ID,
 		AppName:     s.AppName,
 		AppVersion:  s.AppVersion,
 		Environment: s.Environment,
@@ -279,4 +306,21 @@ func errorWithNonDigit(w http.ResponseWriter, err error) {
 	log.Printf("User insert non-digit in request: %v", err)
 	h := &HelloStruct{Say: "In /api/app/ endpoint ID should be digit"}
 	json.NewEncoder(w).Encode(h)
+}
+
+func (a *App) validateInsert(name, env string) bool {
+
+	if (len(name) != 0) && (len(env) != 0) {
+
+		_, err := a.SearchInDB(name, env)
+
+		if err == nil {
+			return false
+		} else if err.Error() == "record not found" {
+			return true
+		} else {
+			return false
+		}
+	}
+	return false
 }

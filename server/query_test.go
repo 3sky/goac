@@ -64,7 +64,7 @@ func TestSelectFromDBWhereID(t *testing.T) {
 	if err != nil {
 		fmt.Printf("Cannot find data in TestDB.db: %v", err)
 	}
-	status, err = a.SelectFromDBWhereID(int64(testStatus.Model.ID))
+	status, err = a.SelectFromDBWhereID(int64(testStatus.ID))
 	if err != nil {
 		fmt.Printf("Cannot get row from DB in TestSelectFromDBWhereID: %v", err)
 	}

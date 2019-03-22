@@ -42,7 +42,7 @@ func (a *App) DisplayHTMLStg(w http.ResponseWriter, r *http.Request) {
 	stg, path, err := a.preperHTML("stg")
 
 	if err != nil {
-		log.Printf("cannot get dev aplication from db: %v", err)
+		log.Printf("cannot get stg aplication from db: %v", err)
 	}
 
 	tmpl := template.Must(template.ParseFiles(path + "/hello.html"))

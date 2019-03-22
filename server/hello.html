@@ -22,6 +22,7 @@ tr:nth-child(even) {
 <h1 align="center"> {{.PageTitle}} </h1>
 <table style="width:100%">
     <tr>
+      <th>ID</th>
       <th>App Name</th>
       <th>App Version</th> 
       <th>Environment</th> 
@@ -31,6 +32,7 @@ tr:nth-child(even) {
     </tr>
     {{range .OneApp}}
     <tr>
+        <td>{{ .ID }} </td>
         <td>{{ .AppName }} </td>
         <td>{{ .AppVersion }} </td>
         <td>{{ .Environment }} </td>

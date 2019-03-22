@@ -3,13 +3,12 @@ package main
 import (
 	"time"
 
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 //StatusStruct - data from DB
 type StatusStruct struct {
-	gorm.Model
+	ID          int       `main:"id"`
 	AppName     string    `main:"app_name"`
 	AppVersion  string    `main:"app_version"`
 	Environment string    `main:"environment"`
@@ -113,7 +112,7 @@ func (a *App) GetAllID() ([]int, error) {
 	}
 
 	for _, data := range statuses {
-		ID = append(ID, int(data.Model.ID))
+		ID = append(ID, data.ID)
 	}
 
 	return ID, nil
@@ -135,6 +134,21 @@ func (a *App) InsertToDB(app, version, updater, Environment, Branch string) erro
 	}
 
 	return nil
+
+}
+
+//SearchInDB - search app information with name and environment
+func (a *App) SearchInDB(app, env string) (StatusStruct, error) {
+
+	var status StatusStruct
+
+	err := a.DB.Where("app_name = ? AND environment = ?", app, env).Find(&status).Error
+
+	if err != nil {
+		return status, err
+	}
+
+	return status, nil
 
 }
 

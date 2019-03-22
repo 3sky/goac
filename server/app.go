@@ -65,6 +65,7 @@ func (a *App) initializeRoutes() {
 	}
 
 	a.Router.HandleFunc("/hello", use(SayHello, p.basicAuth)).Methods("GET")
+	a.Router.HandleFunc("/api", use(a.SearchApp, p.basicAuth)).Methods("POST")
 	a.Router.HandleFunc("/api/app/{id}", use(a.DisplayAppByID, p.basicAuth)).Methods("GET")
 	a.Router.HandleFunc("/api/app/new", use(a.AddNewApp, p.basicAuth)).Methods("POST")
 	a.Router.HandleFunc("/api/app/{id}", use(a.UpdateData, p.basicAuth)).Methods("PUT")
