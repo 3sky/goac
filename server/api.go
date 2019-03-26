@@ -119,8 +119,15 @@ func (a *App) SearchApp(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Error while searching app: %v", err)
 			}
 
+			if len(tmp.AppName) == 0 {
+				h := &HelloStruct{Say: "No such app ! "}
+				json.NewEncoder(w).Encode(h)
+			} else {
+				json.NewEncoder(w).Encode(tmp)
+			}
+
 			//app = GetAppStatusStructFromStatusStruct(&tmp)
-			json.NewEncoder(w).Encode(tmp)
+			//json.NewEncoder(w).Encode(tmp)
 
 		} else {
 			h := &HelloStruct{Say: "Application name and environment are mandatory ! "}
@@ -320,7 +327,6 @@ func (a *App) validateInsert(name, env string) bool {
 	if (len(name) != 0) && (len(env) != 0) {
 
 		_, err := a.SearchInDB(name, env)
-
 		if err == nil {
 			return false
 		} else if err.Error() == "record not found" {
@@ -329,5 +335,6 @@ func (a *App) validateInsert(name, env string) bool {
 			return false
 		}
 	}
+
 	return false
 }

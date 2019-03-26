@@ -147,12 +147,16 @@ func (a *App) SearchInDB(app, env string) (AppStatusStruct, error) {
 	var status AppStatusStruct
 
 	err := a.DB.Where("app_name = ? AND environment = ?", app, env).Find(&status).Error
-
-	if err != nil {
-		return status, err
-	}
-
-	return status, nil
+	/**
+		if err == nil {
+			return status, err
+		} else if err.Error() == "record not found" {
+			return status, nil
+		} else {
+			return status, err
+		}
+	**/
+	return status, err
 
 }
 

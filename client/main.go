@@ -7,17 +7,6 @@ import (
 	"os"
 )
 
-//Insert - struct with data to insert
-type Insert struct {
-	ID          int
-	IP          string
-	AppName     string
-	AppVersion  string
-	Environment string
-	Branch      string
-	UpdateBy    string
-}
-
 //Configuration - struct with conf
 type Configuration struct {
 	Creditional `json:"creditional"`
@@ -36,14 +25,9 @@ type Server struct {
 	Port int    `json:"port"`
 }
 
-var envs = map[string]string{
-	"":    "empty",
-	"dev": "development",
-	"stg": "stage",
-}
-
 func main() {
 
+	actionPtr := flag.String("action", "get", "what You want to do?")
 	appIDPtr := flag.Int("id", 1, "application/component ID")
 	appPtr := flag.String("app", "", "application/component name")
 	IPPtr := flag.String("ip", "", "aplication IP")
@@ -51,38 +35,40 @@ func main() {
 	updaterPtr := flag.String("updater", "", "person who insert this row")
 	environmentPtr := flag.String("env", "", "application's environment")
 	branchPtr := flag.String("branch", "", "application's branch")
-	promotePtr := flag.Bool("p", false, "Promoting app to next environment")
+	//promotePtr := flag.Bool("p", false, "Promoting app to next environment")
 
 	flag.Parse()
 
 	cfg := LoadConfiguration(".creds")
 
-	if _, ok := envs[*environmentPtr]; !ok {
-		fmt.Println("#----------------#\nWrong environment, You can use", getKeyFromMap(envs))
-		os.Exit(0)
+	switch *actionPtr {
+	case "get":
+		fmt.Println("I wiil get it!")
+		err := cfg.GetApp(*appIDPtr)
+		if err != nil {
+			fmt.Println("Error while getting app", err)
+		}
+	case "search":
+		fmt.Println("I will search it!")
+		err := cfg.GetAppByName(*appPtr, *environmentPtr)
+		if err != nil {
+			fmt.Println("Error while searching app", err)
+		}
+	case "insert":
+		fmt.Println("I will insert it!")
+		err := cfg.InsertApp(*appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
+		if err != nil {
+			fmt.Println("Error while inserting new app", err)
+		}
+	case "promote":
+		fmt.Println("I will promote it!")
+		//cfg.PromoteApp()
+	case "delete":
+		fmt.Println("I will delete it!")
+		//cfg.DeleteApp(*IPPtr)
+	default:
+		fmt.Println("I will do nothing! Valid action is:", getKeyFromMap(action))
 	}
-
-	ins := &Insert{
-		ID:          *appIDPtr,
-		IP:          *IPPtr,
-		AppName:     *appPtr,
-		AppVersion:  *versionPtr,
-		Environment: *environmentPtr,
-		Branch:      *branchPtr,
-		UpdateBy:    *updaterPtr,
-	}
-
-	//app env from DB, not from cmd
-	if *promotePtr && *environmentPtr == "dev" {
-		ins.promoteApp()
-	}
-
-	cfg.InsertApp(ins)
-	//cfg.GetApp(*appIDPtr)
-}
-
-func (i *Insert) promoteApp() {
-	i.Environment = "stg"
 }
 
 //LoadConfiguration - just load configuration file
@@ -96,13 +82,4 @@ func LoadConfiguration(file string) Configuration {
 	jsonParser := json.NewDecoder(configFile)
 	jsonParser.Decode(&config)
 	return config
-}
-
-func getKeyFromMap(m map[string]string) []string {
-
-	e := make([]string, 0, len(m))
-	for k := range m {
-		e = append(e, k)
-	}
-	return e
 }
