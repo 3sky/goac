@@ -115,19 +115,20 @@ func (a *App) SearchApp(w http.ResponseWriter, r *http.Request) {
 		if (len(app.AppName) != 0) && (len(app.Environment) != 0) {
 
 			tmp, err := a.SearchInDB(app.AppName, app.Environment)
-			if err != nil {
+
+			switch {
+			case err == nil:
+				log.Printf("Error while searching app: %v", err)
+			case err.Error() == "record not found":
+			default:
 				log.Printf("Error while searching app: %v", err)
 			}
-
 			if len(tmp.AppName) == 0 {
 				h := &HelloStruct{Say: "No such app ! "}
 				json.NewEncoder(w).Encode(h)
 			} else {
 				json.NewEncoder(w).Encode(tmp)
 			}
-
-			//app = GetAppStatusStructFromStatusStruct(&tmp)
-			//json.NewEncoder(w).Encode(tmp)
 
 		} else {
 			h := &HelloStruct{Say: "Application name and environment are mandatory ! "}

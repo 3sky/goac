@@ -15,53 +15,41 @@ App contains basic http auth with `3sky:test` hardcoded in app.go, feel free to 
 - Build app
 
   ```bash
-  go build -o VersionTrack ./...
+  make build
   ```
 
-- Ship it !
+- Run server !
 
   ```bash
-  chmod +x
-  ./VersionTrack > VersionTrack.log &
+  make run
   ```
 
-### Base command usage
+### API Base command usage
 
 - Almost everywhere `-u user:password` is mandatory
+- API accpect fallwoing methods:
 
-- Get one app
+    - GET `curl -s http://127.0.0.1:5000/api/app/1`
+    - POST `curl -H "Content-Type: application/json" -X POST -d '{"app_name": "GO_API", "app_version": "2.123", "environment": "stg"}' http://127.0.0.1:5000/api/app/new`
+    - PUT `curl -i -H "Content-Type: application/json" -X PUT -d '{"app_name": "GO_API", "app_version": "0.95"}' http://127.0.0.1:5000/api/app/2`
+    - DELETE `curl -s -X DELETE http://127.0.0.1:5000/api/app/2`
 
-  ```commandline
-  curl -s http://127.0.0.1:5000/api/app/1 | jq .
-  ```
+- POST/PUT available parameters
 
-- Get all app
+    - app_name, app_version, environment, ip, branch, update_by
 
-  ```commandline
-  curl -s http://127.0.0.1:5000/api/apps | jq .
-  ```
 
-- Add new app
+### CLI base usage
 
-  ```commandline
-  curl -s -H "Content-Type: application/json" -X POST -d '{"app_name": "etl3-user-panel", "app_version": "2.123", "update_by": "Kuba", "environment": "stg", "IP": "10.12.176.14", "branch": "hotfix"}' http://127.0.0.1:5000/api/app/new
-  ```
+- Get help
 
-- Update data
-  
-  ```commandline
-  curl -i -H "Content-Type: application/json" -X PUT -d '{"app_name": "GO API", "app_version": "0.95"}' http://127.0.0.1:5000/api/app/2
-  ```
+    ```bash
+    ./appClient -help
+    ```
 
-- Delete data
+- Sample search
 
-  ```commandline
-  curl -s -X DELETE http://127.0.0.1:5000/api/app/2 | jq .
-  ```
-
-- Get HTML table(this endpoint is public)
-
-  ```commandline
-  curl -s http://127.0.0.1:5000/
-  ```
+    ```bash
+   ./appClient -action=search -app=GO_API -env=dev
+    ```
 

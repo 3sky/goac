@@ -28,14 +28,13 @@ type Server struct {
 func main() {
 
 	actionPtr := flag.String("action", "get", "what You want to do?")
-	appIDPtr := flag.Int("id", 1, "application/component ID")
+	appIDPtr := flag.Int("id", 0, "application/component ID")
 	appPtr := flag.String("app", "", "application/component name")
 	IPPtr := flag.String("ip", "", "aplication IP")
 	versionPtr := flag.String("ver", "", "version of application/component")
 	updaterPtr := flag.String("updater", "", "person who insert this row")
 	environmentPtr := flag.String("env", "", "application's environment")
 	branchPtr := flag.String("branch", "", "application's branch")
-	//promotePtr := flag.Bool("p", false, "Promoting app to next environment")
 
 	flag.Parse()
 
@@ -65,7 +64,7 @@ func main() {
 		//cfg.PromoteApp()
 	case "delete":
 		fmt.Println("I will delete it!")
-		//cfg.DeleteApp(*IPPtr)
+		cfg.DeleteApp(*appIDPtr, *appPtr, *environmentPtr)
 	default:
 		fmt.Println("I will do nothing! Valid action is:", getKeyFromMap(action))
 	}

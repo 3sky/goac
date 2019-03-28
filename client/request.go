@@ -117,7 +117,7 @@ func (c *Configuration) GetAppByName(appPtr, environmentPtr string) error {
 
 	err = json.NewDecoder(resp.Body).Decode(&a)
 	if err != nil {
-		fmt.Printf("Error while decode in TestDisplayAppByID: %v", err)
+		log.Printf("Error while decode in GetAppByName: %v", err)
 	}
 	if len(a.AppName) != 0 {
 		a.prettyPrint()
@@ -179,6 +179,39 @@ func (c *Configuration) InsertApp(appPtr, IPPtr, versionPtr, updaterPtr, environ
 	return nil
 }
 
+func (c *Configuration) DeleteApp(appIDPtr int, appPtr, environmentPtr string) {
+
+	fmt.Println(appIDPtr, appPtr, environmentPtr)
+	if !(appIDPtr == 0) {
+		deleteAppByID(appIDPtr)
+	} else if !(len(appPtr) == 0 || len(environmentPtr) == 0) {
+		fmt.Println("searchapp")
+		fmt.Println("getappID")
+		fmt.Println("deletebyid")
+	} else {
+		fmt.Printf("\nGo fuck off !\n\n")
+	}
+}
+
+func (c *Configuration) deleteAppByID(i int) error {
+
+	var client http.Client
+
+	url := fmt.Sprintf("http://%s:%d/api/app/%d", c.Server.IP, c.Server.Port, i)
+
+	req1, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return fmt.Errorf("Error while creating DELETE request: %v \n", err)
+	}
+
+	_, err = client.Do(req1)
+	if err != nil {
+		return fmt.Errorf("Error while DO DELETE request: %v \n", err)
+	}
+
+	return nil
+
+}
 func getKeyFromMap(m map[string]string) []string {
 
 	e := make([]string, 0, len(m))
