@@ -20,7 +20,7 @@ const (
 )
 **/
 type AppStatusStruct struct {
-	ID          int    `json:"id"`
+	ID          int    `json:"id, omitempty"`
 	AppName     string `json:"app_name"`
 	AppVersion  string `json:"app_version"`
 	Environment string `json:"environment"`
@@ -31,36 +31,21 @@ type AppStatusStruct struct {
 }
 
 var envs = map[string]string{
-	"":    "empty",
 	"dev": "development",
 	"stg": "stage",
 }
 
 var action = map[string]string{
-	"":        "empty",
 	"get":     "gettin app by ID",
 	"search":  "search app by name and env",
-	"insert":  "insert app",
+	"add":     "add new app",
+	"update":  "update app",
 	"promote": "promote app to next env",
 	"delete":  "delete app",
 }
 
-/**
-	if _, ok := envs[*environmentPtr]; !ok {
-		fmt.Printf("\nWrong environment, You can use %s \n\n", getKeyFromMap(envs))
-		os.Exit(0)
-	}
-
-
-
-		if *promotePtr && *environmentPtr == "dev" {
-			ins.promoteApp()
-		}
-
-**/
-
 //GetApp - gets app from API bu ID
-func (c *Configuration) GetApp(i int) error {
+func (c *Configuration) GetApp(i int) (AppStatusStruct, error) {
 	var client http.Client
 	var a AppStatusStruct
 
@@ -81,15 +66,14 @@ func (c *Configuration) GetApp(i int) error {
 		fmt.Printf("Error while decode in GetApp: %v", err)
 	}
 	if len(a.AppName) != 0 {
-		a.prettyPrint()
+		return a, nil
 	} else {
-		fmt.Println("There is no app with ID:", a.ID)
+		return AppStatusStruct{}, fmt.Errorf("There is no app with ID: %d", a.ID)
 	}
-	return nil
 }
 
 //GetAppByName - Get app information with name and env
-func (c *Configuration) GetAppByName(appPtr, environmentPtr string) error {
+func (c *Configuration) GetAppByName(appPtr, environmentPtr string) (AppStatusStruct, error) {
 	var client http.Client
 	var a AppStatusStruct
 
@@ -119,17 +103,17 @@ func (c *Configuration) GetAppByName(appPtr, environmentPtr string) error {
 	if err != nil {
 		log.Printf("Error while decode in GetAppByName: %v", err)
 	}
-	if len(a.AppName) != 0 {
-		a.prettyPrint()
-	} else {
-		fmt.Printf("There is no app with name %s on %s environment\n", appPtr, environmentPtr)
-	}
 
-	return nil
+	if len(a.AppName) != 0 {
+		return a, nil
+	} else {
+		return AppStatusStruct{}, fmt.Errorf("\nThere is no app with name %s on %s environment\n", appPtr, environmentPtr)
+	}
 
 }
 
-func (c *Configuration) InsertApp(appPtr, IPPtr, versionPtr, updaterPtr, environmentPtr, branchPtr string) error {
+//AddApp - add brand new app
+func (c *Configuration) AddApp(appPtr, IPPtr, versionPtr, updaterPtr, environmentPtr, branchPtr string) (AppStatusStruct, error) {
 
 	var client http.Client
 
@@ -151,7 +135,7 @@ func (c *Configuration) InsertApp(appPtr, IPPtr, versionPtr, updaterPtr, environ
 
 	payload, err := json.Marshal(APP)
 	if err != nil {
-		fmt.Printf("Error while marshall in TestAddNewApp: %v", err)
+		fmt.Printf("Error while marshall in Insert App: %v", err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
@@ -170,27 +154,119 @@ func (c *Configuration) InsertApp(appPtr, IPPtr, versionPtr, updaterPtr, environ
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 
+	//TODO Insert sholud also make update
+
 	if strings.Contains(buf.String(), "exits") {
-		fmt.Printf("\nThis app already exits on this environment !\n\n")
+		return AppStatusStruct{}, fmt.Errorf("\nThis app already exits on this environment !\n\n")
 	} else {
-		c.GetAppByName(appPtr, environmentPtr)
+		return c.GetAppByName(appPtr, environmentPtr)
+	}
+
+}
+
+//DeleteApp - delete app by ID or new & env
+func (c *Configuration) DeleteApp(appIDPtr int, appPtr, environmentPtr string) error {
+
+	if !(appIDPtr == 0) {
+		c.deleteAppByID(appIDPtr)
+	} else if !(len(appPtr) == 0 || len(environmentPtr) == 0) {
+		app, err := c.GetAppByName(appPtr, environmentPtr)
+		if err != nil {
+			return err
+		}
+		err = c.deleteAppByID(app.ID)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("ID or Name and Environment are empty !")
 	}
 
 	return nil
 }
 
-func (c *Configuration) DeleteApp(appIDPtr int, appPtr, environmentPtr string) {
+//TODO add promote
+func (c *Configuration) PromoteApp(appIDPtr int, appPtr, environmentPtr string) (AppStatusStruct, error) {
 
-	fmt.Println(appIDPtr, appPtr, environmentPtr)
 	if !(appIDPtr == 0) {
-		deleteAppByID(appIDPtr)
+		return c.promoteAppByID(appIDPtr)
 	} else if !(len(appPtr) == 0 || len(environmentPtr) == 0) {
-		fmt.Println("searchapp")
-		fmt.Println("getappID")
-		fmt.Println("deletebyid")
+		base_app, err := c.GetAppByName(appPtr, environmentPtr)
+		if err != nil {
+			return AppStatusStruct{}, err
+		}
+		app, err := c.promoteAppByID(base_app.ID)
+		if err != nil {
+			return AppStatusStruct{}, err
+		}
+
+		return app, nil
 	} else {
-		fmt.Printf("\nGo fuck off !\n\n")
+		return AppStatusStruct{}, fmt.Errorf("ID or Name and Environment are empty !")
 	}
+}
+
+func (c *Configuration) promoteAppByID(i int) (AppStatusStruct, error) {
+
+	var client http.Client
+
+	var a AppStatusStruct
+	url := fmt.Sprintf("http://%s:%d/api/app/%d", c.Server.IP, c.Server.Port, i)
+
+	getReq, err := http.NewRequest("GET", url, nil)
+	getReq.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
+	if err != nil {
+		log.Printf("Error here", err)
+	}
+
+	getResp, err := client.Do(getReq)
+	if err != nil {
+		log.Printf("Error here", err)
+	}
+
+	defer getResp.Body.Close()
+	err = json.NewDecoder(getResp.Body).Decode(&a)
+	if err != nil {
+		fmt.Printf("Error while decode in json : %v", err)
+	}
+
+	switch a.Environment {
+	case "dev":
+		a.Environment = "stg"
+	case "stg":
+		a.Environment = "preprod"
+	case "preprod":
+		a.Environment = "prod"
+	}
+
+	payload, err := json.Marshal(a)
+	if err != nil {
+		fmt.Printf("Error while marshall in promoteAppByID: %v", err)
+	}
+
+	url_new := fmt.Sprintf("http://%s:%d/api/app/new", c.Server.IP, c.Server.Port)
+	postReq, err := http.NewRequest("POST", url_new, bytes.NewBuffer(payload))
+	postReq.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
+	if err != nil {
+		log.Printf("Error here", err)
+	}
+
+	postResp, err := client.Do(postReq)
+	if err != nil {
+		fmt.Printf("Error here", err)
+	}
+	defer postResp.Body.Close()
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(postResp.Body)
+	fmt.Println(buf.String())
+	if strings.Contains(buf.String(), "exits") {
+		return AppStatusStruct{}, fmt.Errorf("\nThis app already exits on this environment !\n\n")
+	} else {
+		fmt.Println(a.AppName, a.Environment)
+		return c.GetAppByName(a.AppName, a.Environment)
+	}
+
 }
 
 func (c *Configuration) deleteAppByID(i int) error {
@@ -199,12 +275,13 @@ func (c *Configuration) deleteAppByID(i int) error {
 
 	url := fmt.Sprintf("http://%s:%d/api/app/%d", c.Server.IP, c.Server.Port, i)
 
-	req1, err := http.NewRequest("DELETE", url, nil)
+	req, err := http.NewRequest("DELETE", url, nil)
+	req.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
 	if err != nil {
 		return fmt.Errorf("Error while creating DELETE request: %v \n", err)
 	}
 
-	_, err = client.Do(req1)
+	_, err = client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error while DO DELETE request: %v \n", err)
 	}
@@ -221,26 +298,6 @@ func getKeyFromMap(m map[string]string) []string {
 	return e
 }
 
-func (i *AppStatusStruct) promoteApp() {
+func (i *AppStatusStruct) Apssp() {
 	i.Environment = "stg"
-}
-
-func (a *AppStatusStruct) prettyPrint() {
-	longestString := len(fmt.Sprintf("UpdateDate: ", a.UpdateDate))
-	for i := 0; i < longestString; i++ {
-		fmt.Printf("#")
-	}
-	fmt.Println("#")
-	fmt.Println("ID: ", a.ID)
-	fmt.Println("AppName:", a.AppName)
-	fmt.Println("AppVersion: ", a.AppVersion)
-	fmt.Println("Environment: ", a.Environment)
-	fmt.Println("Branch: ", a.Branch)
-	fmt.Println("UpdateDate: ", a.UpdateDate)
-	fmt.Println("UpdateBy: ", a.UpdateBy)
-	for i := 0; i < longestString; i++ {
-		fmt.Printf("#")
-	}
-	fmt.Println("#")
-
 }

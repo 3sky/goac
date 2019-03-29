@@ -25,6 +25,8 @@ type Server struct {
 	Port int    `json:"port"`
 }
 
+var app AppStatusStruct
+
 func main() {
 
 	actionPtr := flag.String("action", "get", "what You want to do?")
@@ -42,29 +44,52 @@ func main() {
 
 	switch *actionPtr {
 	case "get":
-		fmt.Println("I wiil get it!")
-		err := cfg.GetApp(*appIDPtr)
+		fmt.Println("I will get it!")
+		app, err := cfg.GetApp(*appIDPtr)
 		if err != nil {
-			fmt.Println("Error while getting app", err)
+			fmt.Println(err)
+		} else {
+			app.prettyPrint()
 		}
 	case "search":
 		fmt.Println("I will search it!")
-		err := cfg.GetAppByName(*appPtr, *environmentPtr)
-		if err != nil {
-			fmt.Println("Error while searching app", err)
+		if len(*appPtr) != 0 && len(*environmentPtr) != 0 {
+			app, err := cfg.GetAppByName(*appPtr, *environmentPtr)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				app.prettyPrint()
+			}
+		} else {
+			fmt.Println(" \nApp and environment are mandatory !")
 		}
-	case "insert":
-		fmt.Println("I will insert it!")
-		err := cfg.InsertApp(*appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
+
+	case "add":
+		fmt.Println("I will add it!")
+		app, err := cfg.AddApp(*appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
 		if err != nil {
 			fmt.Println("Error while inserting new app", err)
+		} else {
+			app.prettyPrint()
 		}
+	case "update":
+		fmt.Println("I will update it!")
 	case "promote":
 		fmt.Println("I will promote it!")
-		//cfg.PromoteApp()
+		app, err := cfg.PromoteApp(*appIDPtr, *appPtr, *environmentPtr)
+		if err != nil {
+			fmt.Println("Error while promote app", err)
+		} else {
+			app.prettyPrint()
+		}
 	case "delete":
 		fmt.Println("I will delete it!")
-		cfg.DeleteApp(*appIDPtr, *appPtr, *environmentPtr)
+		err := cfg.DeleteApp(*appIDPtr, *appPtr, *environmentPtr)
+		if err != nil {
+			fmt.Println("Error while deleting app", err)
+		} else {
+			fmt.Println("App deleted ")
+		}
 	default:
 		fmt.Println("I will do nothing! Valid action is:", getKeyFromMap(action))
 	}
@@ -81,4 +106,25 @@ func LoadConfiguration(file string) Configuration {
 	jsonParser := json.NewDecoder(configFile)
 	jsonParser.Decode(&config)
 	return config
+}
+
+//PrettyPrint - just print app struct
+func (a *AppStatusStruct) prettyPrint() {
+	longestString := len(fmt.Sprintf("UpdateDate: ", a.UpdateDate))
+	for i := 0; i < longestString; i++ {
+		fmt.Printf("#")
+	}
+	fmt.Println("#")
+	fmt.Println("ID: ", a.ID)
+	fmt.Println("AppName:", a.AppName)
+	fmt.Println("AppVersion: ", a.AppVersion)
+	fmt.Println("Environment: ", a.Environment)
+	fmt.Println("Branch: ", a.Branch)
+	fmt.Println("UpdateDate: ", a.UpdateDate)
+	fmt.Println("UpdateBy: ", a.UpdateBy)
+	for i := 0; i < longestString; i++ {
+		fmt.Printf("#")
+	}
+	fmt.Println("#")
+
 }

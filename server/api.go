@@ -118,10 +118,9 @@ func (a *App) SearchApp(w http.ResponseWriter, r *http.Request) {
 
 			switch {
 			case err == nil:
-				log.Printf("Error while searching app: %v", err)
 			case err.Error() == "record not found":
 			default:
-				log.Printf("Error while searching app: %v", err)
+				log.Printf("Error while searching app(not nill): %v", err)
 			}
 			if len(tmp.AppName) == 0 {
 				h := &HelloStruct{Say: "No such app ! "}
