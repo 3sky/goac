@@ -33,9 +33,9 @@ func TestInsertToDB(t *testing.T) {
 	a := createTestDBConnection()
 	defer a.DB.Close()
 
-	var status StatusStruct
+	var status AppStatusStruct
 
-	err := a.InsertToDB("Test_run_app", "1", "UnitTest", "dev", "testing")
+	err := a.InsertToDB("Test_run_app", "1", "UnitTest", "dev", "testing", "10.10.10.10")
 	if err != nil {
 		fmt.Printf("Cannot insert data in TestInsertToDB: %v", err)
 	}
@@ -57,8 +57,8 @@ func TestSelectFromDBWhereID(t *testing.T) {
 	a := createTestDBConnection()
 	defer a.DB.Close()
 
-	var testStatus StatusStruct
-	var status StatusStruct
+	var testStatus AppStatusStruct
+	var status AppStatusStruct
 
 	err := a.DB.Where("app_name = ?", "Test_run_app").First(&testStatus).Error
 	if err != nil {
@@ -80,17 +80,17 @@ func TestGetAllID(t *testing.T) {
 	a := createTestDBConnection()
 	defer a.DB.Close()
 
-	err := a.InsertToDB("Test 1", "1", "Admin 1", "dev1", "testing1")
+	err := a.InsertToDB("Test 1", "1", "Admin 1", "dev1", "testing1", "")
 	if err != nil {
 		fmt.Printf("Cannot insert data in TestGetAllID: %v", err)
 	}
 
-	err = a.InsertToDB("Test 2", "2", "Admin 2", "dev2", "testing2")
+	err = a.InsertToDB("Test 2", "2", "Admin 2", "dev2", "testing2", "")
 	if err != nil {
 		fmt.Printf("Cannot insert data in TestGetAllID: %v", err)
 	}
 
-	err = a.InsertToDB("Test 3", "3", "Admin 3", "dev2", "testing3")
+	err = a.InsertToDB("Test 3", "3", "Admin 3", "dev2", "testing3", "")
 	if err != nil {
 		fmt.Printf("Cannot insert data in TestGetAllID: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestUpdateSelectedColumn(t *testing.T) {
 	a := createTestDBConnection()
 	defer a.DB.Close()
 
-	var s1, s2, s3 StatusStruct
+	var s1, s2, s3 AppStatusStruct
 	a.UpdateSelectedColumn(6, "app_name", "Test_pass")
 	a.UpdateSelectedColumn(7, "update_by", "Greate Tester")
 	a.UpdateSelectedColumn(7, "environment", "stage")

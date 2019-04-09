@@ -19,6 +19,7 @@ type StatusStruct struct {
 	UpdateBy    string    `main:"update_by"`
 }
 **/
+
 //DeleteRowByID - Delete row
 func (a *App) DeleteRowByID(id int64) error {
 

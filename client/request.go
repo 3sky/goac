@@ -19,8 +19,10 @@ const (
 	DebugColor   = "\033[0;36m%s\033[0m"
 )
 **/
+
+// AppStatusStruct - main struct
 type AppStatusStruct struct {
-	ID          int    `json:"id, omitempty"`
+	ID          int    `json:"id"`
 	AppName     string `json:"app_name"`
 	AppVersion  string `json:"app_version"`
 	Environment string `json:"environment"`
@@ -53,12 +55,12 @@ func (c *Configuration) GetApp(i int) (AppStatusStruct, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	req.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
 	if err != nil {
-		log.Printf("Error here", err)
+		log.Printf("Error here %v", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Error here", err)
+		log.Printf("Error here %v", err)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&a)
@@ -67,9 +69,9 @@ func (c *Configuration) GetApp(i int) (AppStatusStruct, error) {
 	}
 	if len(a.AppName) != 0 {
 		return a, nil
-	} else {
-		return AppStatusStruct{}, fmt.Errorf("There is no app with ID: %d", a.ID)
 	}
+	return AppStatusStruct{}, fmt.Errorf("There is no app with ID: %d", a.ID)
+
 }
 
 //GetAppByName - Get app information with name and env
@@ -84,19 +86,19 @@ func (c *Configuration) GetAppByName(appPtr, environmentPtr string) (AppStatusSt
 
 	payload, err := json.Marshal(APP)
 	if err != nil {
-		log.Printf("Error while marshal data", err)
+		log.Printf("Error while marshal data  %v", err)
 	}
 
 	url := fmt.Sprintf("http://%s:%d/api", c.Server.IP, c.Server.Port)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	req.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
 	if err != nil {
-		log.Printf("Error here", err)
+		log.Printf("Error here %v", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Error here", err)
+		log.Printf("Error here %v", err)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&a)
@@ -106,9 +108,9 @@ func (c *Configuration) GetAppByName(appPtr, environmentPtr string) (AppStatusSt
 
 	if len(a.AppName) != 0 {
 		return a, nil
-	} else {
-		return AppStatusStruct{}, fmt.Errorf("\nThere is no app with name %s on %s environment\n", appPtr, environmentPtr)
 	}
+
+	return AppStatusStruct{}, fmt.Errorf("\nthere is no app with name %s on %s environment", appPtr, environmentPtr)
 
 }
 
@@ -141,12 +143,12 @@ func (c *Configuration) AddApp(appPtr, IPPtr, versionPtr, updaterPtr, environmen
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	req.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
 	if err != nil {
-		log.Printf("Error here", err)
+		log.Printf("Error here %v", err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Error here", err)
+		fmt.Printf("Error here %v", err)
 	}
 
 	defer resp.Body.Close()
@@ -157,10 +159,10 @@ func (c *Configuration) AddApp(appPtr, IPPtr, versionPtr, updaterPtr, environmen
 	//TODO Insert sholud also make update
 
 	if strings.Contains(buf.String(), "exits") {
-		return AppStatusStruct{}, fmt.Errorf("\nThis app already exits on this environment !\n\n")
-	} else {
-		return c.GetAppByName(appPtr, environmentPtr)
+		return AppStatusStruct{}, fmt.Errorf("\nthis app already exits on this environment")
 	}
+
+	return c.GetAppByName(appPtr, environmentPtr)
 
 }
 
@@ -179,30 +181,30 @@ func (c *Configuration) DeleteApp(appIDPtr int, appPtr, environmentPtr string) e
 			return err
 		}
 	} else {
-		return fmt.Errorf("ID or Name and Environment are empty !")
+		return fmt.Errorf("id or name and Environment are empty")
 	}
 
 	return nil
 }
 
-//TODO add promote
+//PromoteApp - bump application environment to next
 func (c *Configuration) PromoteApp(appIDPtr int, appPtr, environmentPtr string) (AppStatusStruct, error) {
 
 	if !(appIDPtr == 0) {
 		return c.promoteAppByID(appIDPtr)
 	} else if !(len(appPtr) == 0 || len(environmentPtr) == 0) {
-		base_app, err := c.GetAppByName(appPtr, environmentPtr)
+		baseApp, err := c.GetAppByName(appPtr, environmentPtr)
 		if err != nil {
 			return AppStatusStruct{}, err
 		}
-		app, err := c.promoteAppByID(base_app.ID)
+		app, err := c.promoteAppByID(baseApp.ID)
 		if err != nil {
 			return AppStatusStruct{}, err
 		}
 
 		return app, nil
 	} else {
-		return AppStatusStruct{}, fmt.Errorf("ID or Name and Environment are empty !")
+		return AppStatusStruct{}, fmt.Errorf("id or name and Environment are empty")
 	}
 }
 
@@ -216,12 +218,12 @@ func (c *Configuration) promoteAppByID(i int) (AppStatusStruct, error) {
 	getReq, err := http.NewRequest("GET", url, nil)
 	getReq.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
 	if err != nil {
-		log.Printf("Error here", err)
+		log.Printf("Error here %v", err)
 	}
 
 	getResp, err := client.Do(getReq)
 	if err != nil {
-		log.Printf("Error here", err)
+		log.Printf("Error here %v", err)
 	}
 
 	defer getResp.Body.Close()
@@ -244,16 +246,16 @@ func (c *Configuration) promoteAppByID(i int) (AppStatusStruct, error) {
 		fmt.Printf("Error while marshall in promoteAppByID: %v", err)
 	}
 
-	url_new := fmt.Sprintf("http://%s:%d/api/app/new", c.Server.IP, c.Server.Port)
-	postReq, err := http.NewRequest("POST", url_new, bytes.NewBuffer(payload))
+	urlNew := fmt.Sprintf("http://%s:%d/api/app/new", c.Server.IP, c.Server.Port)
+	postReq, err := http.NewRequest("POST", urlNew, bytes.NewBuffer(payload))
 	postReq.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
 	if err != nil {
-		log.Printf("Error here", err)
+		log.Printf("Error here %v", err)
 	}
 
 	postResp, err := client.Do(postReq)
 	if err != nil {
-		fmt.Printf("Error here", err)
+		fmt.Printf("Error here %v", err)
 	}
 	defer postResp.Body.Close()
 
@@ -261,11 +263,11 @@ func (c *Configuration) promoteAppByID(i int) (AppStatusStruct, error) {
 	buf.ReadFrom(postResp.Body)
 	fmt.Println(buf.String())
 	if strings.Contains(buf.String(), "exits") {
-		return AppStatusStruct{}, fmt.Errorf("\nThis app already exits on this environment !\n\n")
-	} else {
-		fmt.Println(a.AppName, a.Environment)
-		return c.GetAppByName(a.AppName, a.Environment)
+		return AppStatusStruct{}, fmt.Errorf("\nthis app already exits on this environment")
 	}
+
+	fmt.Println(a.AppName, a.Environment)
+	return c.GetAppByName(a.AppName, a.Environment)
 
 }
 
@@ -278,12 +280,12 @@ func (c *Configuration) deleteAppByID(i int) error {
 	req, err := http.NewRequest("DELETE", url, nil)
 	req.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
 	if err != nil {
-		return fmt.Errorf("Error while creating DELETE request: %v \n", err)
+		return fmt.Errorf("error while creating DELETE request: %v", err)
 	}
 
 	_, err = client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Error while DO DELETE request: %v \n", err)
+		return fmt.Errorf("error while DO DELETE request: %v", err)
 	}
 
 	return nil
@@ -298,6 +300,8 @@ func getKeyFromMap(m map[string]string) []string {
 	return e
 }
 
+/**
 func (i *AppStatusStruct) Apssp() {
 	i.Environment = "stg"
 }
+**/

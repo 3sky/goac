@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -24,28 +23,6 @@ func TestIfcontains(t *testing.T) {
 
 	assert.True(t, Ifcontains(t2, 2))
 	assert.False(t, Ifcontains(t1, 13))
-}
-
-func TestGetAppStatusStructFromStatusStruct(t *testing.T) {
-
-	h := &StatusStruct{
-		ID:          1,
-		AppName:     "Test",
-		AppVersion:  "1",
-		UpdateDate:  time.Now(),
-		UpdateBy:    "Admin 1",
-		Environment: "dev",
-		Branch:      "testing",
-	}
-
-	app := GetAppStatusStructFromStatusStruct(h)
-
-	assert.Equal(t, h.AppName, app.AppName)
-	assert.Equal(t, h.AppVersion, app.AppVersion)
-	assert.Equal(t, h.UpdateBy, app.UpdateBy)
-	assert.Equal(t, h.Environment, app.Environment)
-	assert.Equal(t, h.Branch, app.Branch)
-
 }
 
 func TestSayHello(t *testing.T) {
@@ -82,12 +59,12 @@ func TestDisplayAppByID(t *testing.T) {
 		fmt.Printf("Error with insert into DB in TestDisplayAppByID: %v", err)
 	}
 
-	err = a.InsertToDB("Test_run_app_1", "1", "UnitTest_1", "dev", "fix_12")
+	err = a.InsertToDB("Test_run_app_1", "1", "UnitTest_1", "dev", "fix_12", "10.10.10.10")
 	if err != nil {
 		fmt.Printf("Error with insert into DB in TestDisplayAppByID: %v", err)
 	}
 
-	err = a.InsertToDB("Test_run_app_2", "2", "UnitTest_2", "stage", "new_feature")
+	err = a.InsertToDB("Test_run_app_2", "2", "UnitTest_2", "stage", "new_feature", "10.10.10.10")
 	if err != nil {
 		fmt.Printf("Error with insert into DB in TestDisplayAppByID: %v", err)
 	}
@@ -158,7 +135,7 @@ func TestAddNewApp(t *testing.T) {
 	a := createTestDBConnection()
 	defer a.DB.Close()
 
-	var st1, st2 StatusStruct
+	var st1, st2 AppStatusStruct
 	var h HelloStruct
 
 	P1 := &AppStatusStruct{
@@ -170,8 +147,9 @@ func TestAddNewApp(t *testing.T) {
 	}
 
 	P2 := &AppStatusStruct{
-		AppName:    "New_app_2",
-		AppVersion: "11.1",
+		AppName:     "New_app_2",
+		AppVersion:  "11.1",
+		Environment: "dev",
 	}
 
 	P3 := &AppStatusStruct{
@@ -245,11 +223,11 @@ func TestAddNewApp(t *testing.T) {
 	assert.Equal(t, "New_app_2", st2.AppName)
 	assert.Equal(t, "11.1", st2.AppVersion)
 	assert.Equal(t, "random guy", st2.UpdateBy)
-	assert.Equal(t, "", st2.Environment)
+	assert.Equal(t, "dev", st2.Environment)
 	assert.Equal(t, "", st2.Branch)
 
 	assert.Equal(t, 200, res3.Code)
-	assert.Equal(t, "Application name and version are mandatory ! ", h.Say)
+	assert.Equal(t, "This app already exits on this environment! ", h.Say)
 
 }
 
@@ -305,7 +283,7 @@ func TestUpdateData(t *testing.T) {
 	a := createTestDBConnection()
 	defer a.DB.Close()
 
-	var st1, st2 StatusStruct
+	var st1, st2 AppStatusStruct
 	U1 := &AppStatusStruct{
 		AppName:  "SomeApp",
 		UpdateBy: "test3",

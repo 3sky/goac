@@ -23,7 +23,7 @@ func TestDisplayHTMLDev(t *testing.T) {
 		fmt.Printf("Error with migration in TestDisplayHtml: %v", err)
 	}
 
-	err = a.InsertToDB("Test_run_app_1", "1", "UnitTest_1", "dev", "hotfix1")
+	err = a.InsertToDB("Test_run_app_1", "1", "UnitTest_1", "dev", "hotfix1", "")
 	if err != nil {
 		fmt.Printf("Error while insert data in TestDisplayHtml: %v", err)
 	}
@@ -52,8 +52,8 @@ func TestDisplayHTMLDev(t *testing.T) {
 
 	assert.Contains(t, bodyString, "Hello There!")
 	assert.Contains(t, bodyString, "Test_run_app_1")
-	assert.Contains(t, bodyString, "<td>1 </td>")
-	assert.Contains(t, bodyString, "<td>dev </td>")
+	assert.Contains(t, bodyString, "<td>1</td>")
+	assert.Contains(t, bodyString, "<td>dev</td>")
 	assert.Contains(t, bodyString, "UnitTest_1")
 
 	err = os.Remove("TestDB.db")
@@ -74,7 +74,7 @@ func TestDisplayHTMLStg(t *testing.T) {
 		fmt.Printf("Error with migration in TestDisplayHtml: %v", err)
 	}
 
-	err = a.InsertToDB("Test_run_app_1", "1", "UnitTest_1", "stg", "hotfix1")
+	err = a.InsertToDB("Test_run_app_1", "1", "UnitTest_1", "stg", "hotfix1", "")
 	if err != nil {
 		fmt.Printf("Error while insert data in TestDisplayHtml: %v", err)
 	}
@@ -103,8 +103,8 @@ func TestDisplayHTMLStg(t *testing.T) {
 
 	assert.Contains(t, bodyString, "Hello There!")
 	assert.Contains(t, bodyString, "Test_run_app_1")
-	assert.Contains(t, bodyString, "<td>1 </td>")
-	assert.Contains(t, bodyString, "<td>stg </td>")
+	assert.Contains(t, bodyString, "<td>1</td>")
+	assert.Contains(t, bodyString, "<td>stg</td>")
 	assert.Contains(t, bodyString, "UnitTest_1")
 
 	err = os.Remove("TestDB.db")

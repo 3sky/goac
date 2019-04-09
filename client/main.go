@@ -110,7 +110,7 @@ func LoadConfiguration(file string) Configuration {
 
 //PrettyPrint - just print app struct
 func (a *AppStatusStruct) prettyPrint() {
-	longestString := len(fmt.Sprintf("UpdateDate: ", a.UpdateDate))
+	longestString := len(fmt.Sprintf("UpdateDate: %s", a.UpdateDate))
 	for i := 0; i < longestString; i++ {
 		fmt.Printf("#")
 	}

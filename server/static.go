@@ -31,6 +31,7 @@ func (a *App) DisplayHTMLDev(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(template.ParseFiles(path + "/hello.html"))
+
 	tmpl.Execute(w, dev)
 }
 
