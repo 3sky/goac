@@ -208,6 +208,57 @@ func (c *Configuration) PromoteApp(appIDPtr int, appPtr, environmentPtr string) 
 	}
 }
 
+//PromoteApp - bump application environment to next
+func (c *Configuration) UpdateApp(appIDPtr int, appPtr, IPPtr, versionPtr, updaterPtr, environmentPtr, branchPtr string) (AppStatusStruct, error) {
+
+	var client http.Client
+
+	APP := &AppStatusStruct{
+		AppName:     appPtr,
+		AppVersion:  versionPtr,
+		Environment: environmentPtr,
+		Branch:      branchPtr,
+		IP:          IPPtr,
+		UpdateBy:    updaterPtr,
+	}
+
+	if _, ok := envs[environmentPtr]; !ok {
+		return AppStatusStruct{}, fmt.Errorf("wrong environment, You can use %s", getKeyFromMap(envs))
+	}
+
+	url := fmt.Sprintf("http://%s:%d/api/app/%d", c.Server.IP, c.Server.Port, appIDPtr)
+
+	payload, err := json.Marshal(APP)
+	if err != nil {
+		log.Printf("Error while marshall in update App: %v", err)
+	}
+
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(payload))
+	req.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
+	if err != nil {
+		log.Printf("Error here %v", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error here %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+
+	//TODO Insert sholud also make update
+	fmt.Println(buf.String())
+	if strings.Contains(buf.String(), "exits") {
+		return AppStatusStruct{}, fmt.Errorf("\nthis app already exits on this environment")
+	}
+
+	return c.GetAppByName(appPtr, environmentPtr)
+
+}
+
 func (c *Configuration) promoteAppByID(i int) (AppStatusStruct, error) {
 
 	var client http.Client
@@ -266,7 +317,6 @@ func (c *Configuration) promoteAppByID(i int) (AppStatusStruct, error) {
 		return AppStatusStruct{}, fmt.Errorf("\nthis app already exits on this environment")
 	}
 
-	fmt.Println(a.AppName, a.Environment)
 	return c.GetAppByName(a.AppName, a.Environment)
 
 }

@@ -74,6 +74,12 @@ func main() {
 		}
 	case "update":
 		fmt.Println("I will update it!")
+		app, err := cfg.PromoteApp(*appIDPtr, *appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
+		if err != nil {
+			fmt.Println("Error while promote app", err)
+		} else {
+			app.prettyPrint()
+		}
 	case "promote":
 		fmt.Println("I will promote it!")
 		app, err := cfg.PromoteApp(*appIDPtr, *appPtr, *environmentPtr)
