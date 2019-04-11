@@ -110,7 +110,7 @@ func (c *Configuration) GetAppByName(appPtr, environmentPtr string) (AppStatusSt
 		return a, nil
 	}
 
-	return AppStatusStruct{}, fmt.Errorf("\nthere is no app with name %s on %s environment", appPtr, environmentPtr)
+	return AppStatusStruct{}, fmt.Errorf("There is no app with name %s on %s environment", appPtr, environmentPtr)
 
 }
 
@@ -222,10 +222,6 @@ func (c *Configuration) UpdateApp(appIDPtr int, appPtr, IPPtr, versionPtr, updat
 		UpdateBy:    updaterPtr,
 	}
 
-	if _, ok := envs[environmentPtr]; !ok {
-		return AppStatusStruct{}, fmt.Errorf("wrong environment, You can use %s", getKeyFromMap(envs))
-	}
-
 	url := fmt.Sprintf("http://%s:%d/api/app/%d", c.Server.IP, c.Server.Port, appIDPtr)
 
 	payload, err := json.Marshal(APP)
@@ -249,13 +245,11 @@ func (c *Configuration) UpdateApp(appIDPtr int, appPtr, IPPtr, versionPtr, updat
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 
-	//TODO Insert sholud also make update
-	fmt.Println(buf.String())
 	if strings.Contains(buf.String(), "exits") {
 		return AppStatusStruct{}, fmt.Errorf("\nthis app already exits on this environment")
 	}
 
-	return c.GetAppByName(appPtr, environmentPtr)
+	return c.GetApp(appIDPtr)
 
 }
 

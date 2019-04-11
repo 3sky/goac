@@ -27,6 +27,8 @@ type Server struct {
 
 var app AppStatusStruct
 
+//TODO add infoPrint function
+
 func main() {
 
 	actionPtr := flag.String("action", "get", "what You want to do?")
@@ -44,60 +46,67 @@ func main() {
 
 	switch *actionPtr {
 	case "get":
-		fmt.Println("I will get it!")
-		app, err := cfg.GetApp(*appIDPtr)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			app.prettyPrint()
-		}
-	case "search":
-		fmt.Println("I will search it!")
-		if len(*appPtr) != 0 && len(*environmentPtr) != 0 {
-			app, err := cfg.GetAppByName(*appPtr, *environmentPtr)
+		if *appIDPtr != 0 {
+			app, err := cfg.GetApp(*appIDPtr)
 			if err != nil {
-				fmt.Println(err)
+				infoPrint(fmt.Sprintf("%v", err))
 			} else {
 				app.prettyPrint()
 			}
 		} else {
-			fmt.Println(" \nApp and environment are mandatory !")
+			infoPrint("App ID is mandatory !")
+		}
+	case "search":
+		if len(*appPtr) != 0 && len(*environmentPtr) != 0 {
+			app, err := cfg.GetAppByName(*appPtr, *environmentPtr)
+			if err != nil {
+				infoPrint(fmt.Sprintf("%v", err))
+			} else {
+				app.prettyPrint()
+			}
+		} else {
+			infoPrint("App name and environment are mandatory !")
 		}
 
 	case "add":
-		fmt.Println("I will add it!")
-		app, err := cfg.AddApp(*appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
-		if err != nil {
-			fmt.Println("Error while inserting new app", err)
+		if len(*appPtr) != 0 && len(*environmentPtr) != 0 {
+			app, err := cfg.AddApp(*appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
+			if err != nil {
+				infoPrint(fmt.Sprintf("Error while inserting new app %v", err))
+			} else {
+				app.prettyPrint()
+			}
 		} else {
-			app.prettyPrint()
+			infoPrint("App name and environment are mandatory !")
 		}
 	case "update":
-		fmt.Println("I will update it!")
-		app, err := cfg.PromoteApp(*appIDPtr, *appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
-		if err != nil {
-			fmt.Println("Error while promote app", err)
+		if *appIDPtr != 0 {
+			app, err := cfg.UpdateApp(*appIDPtr, *appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
+			if err != nil {
+				infoPrint(fmt.Sprintf("Error while update app %v", err))
+			} else {
+				app.prettyPrint()
+			}
 		} else {
-			app.prettyPrint()
+			infoPrint("App ID is mandatory in update command !")
 		}
 	case "promote":
-		fmt.Println("I will promote it!")
+		//TODO bad loggin error info
 		app, err := cfg.PromoteApp(*appIDPtr, *appPtr, *environmentPtr)
 		if err != nil {
-			fmt.Println("Error while promote app", err)
+			infoPrint(fmt.Sprintf("Error while promote app %v", err))
 		} else {
 			app.prettyPrint()
 		}
 	case "delete":
-		fmt.Println("I will delete it!")
 		err := cfg.DeleteApp(*appIDPtr, *appPtr, *environmentPtr)
 		if err != nil {
-			fmt.Println("Error while deleting app", err)
+			infoPrint(fmt.Sprintf("Error while deleting app %v", err))
 		} else {
-			fmt.Println("App deleted ")
+			infoPrint("App deleted !")
 		}
 	default:
-		fmt.Println("I will do nothing! Valid action is:", getKeyFromMap(action))
+		infoPrint(fmt.Sprintf("I will do nothing! Valid action is: %s", getKeyFromMap(action)))
 	}
 }
 
@@ -132,5 +141,18 @@ func (a *AppStatusStruct) prettyPrint() {
 		fmt.Printf("#")
 	}
 	fmt.Println("#")
+
+}
+
+func infoPrint(info string) {
+	l := len(info) + 7
+	for i := 0; i < l; i++ {
+		fmt.Printf("=")
+	}
+	fmt.Printf("\n>>>  %s\n", info)
+	for i := 0; i < l; i++ {
+		fmt.Printf("=")
+	}
+	fmt.Println("")
 
 }
