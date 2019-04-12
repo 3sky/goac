@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 )
 
@@ -27,8 +29,6 @@ type Server struct {
 
 var app AppStatusStruct
 
-//TODO add infoPrint function
-
 func main() {
 
 	actionPtr := flag.String("action", "get", "what You want to do?")
@@ -42,14 +42,23 @@ func main() {
 
 	flag.Parse()
 
-	cfg := LoadConfiguration(".creds")
+	cfg := loadConfiguration(".creds")
+
+	switch cfg.validCreds() {
+	case 401:
+		infoPrint("Unauthorized wrong user or password !")
+		os.Exit(0)
+	case 500:
+		infoPrint("Server error. Maybe is down ?")
+		os.Exit(0)
+	}
 
 	switch *actionPtr {
 	case "get":
 		if *appIDPtr != 0 {
 			app, err := cfg.GetApp(*appIDPtr)
 			if err != nil {
-				infoPrint(fmt.Sprintf("%v", err))
+				infoPrint(fmt.Sprintf("Problem: %v", err))
 			} else {
 				app.prettyPrint()
 			}
@@ -60,7 +69,7 @@ func main() {
 		if len(*appPtr) != 0 && len(*environmentPtr) != 0 {
 			app, err := cfg.GetAppByName(*appPtr, *environmentPtr)
 			if err != nil {
-				infoPrint(fmt.Sprintf("%v", err))
+				infoPrint(fmt.Sprintf("Problem: %v", err))
 			} else {
 				app.prettyPrint()
 			}
@@ -72,7 +81,7 @@ func main() {
 		if len(*appPtr) != 0 && len(*environmentPtr) != 0 {
 			app, err := cfg.AddApp(*appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
 			if err != nil {
-				infoPrint(fmt.Sprintf("Error while inserting new app %v", err))
+				infoPrint(fmt.Sprintf("Problem: %v", err))
 			} else {
 				app.prettyPrint()
 			}
@@ -83,7 +92,7 @@ func main() {
 		if *appIDPtr != 0 {
 			app, err := cfg.UpdateApp(*appIDPtr, *appPtr, *IPPtr, *versionPtr, *updaterPtr, *environmentPtr, *branchPtr)
 			if err != nil {
-				infoPrint(fmt.Sprintf("Error while update app %v", err))
+				infoPrint(fmt.Sprintf("Problem: %v", err))
 			} else {
 				app.prettyPrint()
 			}
@@ -91,17 +100,16 @@ func main() {
 			infoPrint("App ID is mandatory in update command !")
 		}
 	case "promote":
-		//TODO bad loggin error info
 		app, err := cfg.PromoteApp(*appIDPtr, *appPtr, *environmentPtr)
 		if err != nil {
-			infoPrint(fmt.Sprintf("Error while promote app %v", err))
+			infoPrint(fmt.Sprintf("Problem: %v", err))
 		} else {
 			app.prettyPrint()
 		}
 	case "delete":
 		err := cfg.DeleteApp(*appIDPtr, *appPtr, *environmentPtr)
 		if err != nil {
-			infoPrint(fmt.Sprintf("Error while deleting app %v", err))
+			infoPrint(fmt.Sprintf("Problem: %v", err))
 		} else {
 			infoPrint("App deleted !")
 		}
@@ -110,8 +118,7 @@ func main() {
 	}
 }
 
-//LoadConfiguration - just load configuration file
-func LoadConfiguration(file string) Configuration {
+func loadConfiguration(file string) Configuration {
 	var config Configuration
 	configFile, err := os.Open(file)
 	defer configFile.Close()
@@ -123,20 +130,39 @@ func LoadConfiguration(file string) Configuration {
 	return config
 }
 
-//PrettyPrint - just print app struct
+func (c *Configuration) validCreds() int {
+
+	var client http.Client
+
+	url := fmt.Sprintf("http://%s:%d/api/app/1", c.Server.IP, c.Server.Port)
+	req, err := http.NewRequest("GET", url, nil)
+	req.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
+	if err != nil {
+		log.Printf("Error here %v", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return 500
+	} else {
+		return resp.StatusCode
+	}
+
+}
+
 func (a *AppStatusStruct) prettyPrint() {
-	longestString := len(fmt.Sprintf("UpdateDate: %s", a.UpdateDate))
+	longestString := len(fmt.Sprintf("Update Date: %s", a.UpdateDate))
 	for i := 0; i < longestString; i++ {
 		fmt.Printf("#")
 	}
 	fmt.Println("#")
 	fmt.Println("ID: ", a.ID)
-	fmt.Println("AppName:", a.AppName)
-	fmt.Println("AppVersion: ", a.AppVersion)
+	fmt.Println("App name:", a.AppName)
+	fmt.Println("App version: ", a.AppVersion)
 	fmt.Println("Environment: ", a.Environment)
 	fmt.Println("Branch: ", a.Branch)
-	fmt.Println("UpdateDate: ", a.UpdateDate)
-	fmt.Println("UpdateBy: ", a.UpdateBy)
+	fmt.Println("Update Date: ", a.UpdateDate)
+	fmt.Println("Update By: ", a.UpdateBy)
 	for i := 0; i < longestString; i++ {
 		fmt.Printf("#")
 	}

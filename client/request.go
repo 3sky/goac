@@ -70,7 +70,7 @@ func (c *Configuration) GetApp(i int) (AppStatusStruct, error) {
 	if len(a.AppName) != 0 {
 		return a, nil
 	}
-	return AppStatusStruct{}, fmt.Errorf("There is no app with ID: %d", a.ID)
+	return AppStatusStruct{}, fmt.Errorf("there is no app with ID - %d", a.ID)
 
 }
 
@@ -159,7 +159,7 @@ func (c *Configuration) AddApp(appPtr, IPPtr, versionPtr, updaterPtr, environmen
 	//TODO Insert sholud also make update
 
 	if strings.Contains(buf.String(), "exits") {
-		return AppStatusStruct{}, fmt.Errorf("\nthis app already exits on this environment")
+		return AppStatusStruct{}, fmt.Errorf("this app already exits on this environment")
 	}
 
 	return c.GetAppByName(appPtr, environmentPtr)
@@ -246,7 +246,7 @@ func (c *Configuration) UpdateApp(appIDPtr int, appPtr, IPPtr, versionPtr, updat
 	buf.ReadFrom(resp.Body)
 
 	if strings.Contains(buf.String(), "exits") {
-		return AppStatusStruct{}, fmt.Errorf("\nthis app already exits on this environment")
+		return AppStatusStruct{}, fmt.Errorf("this app already exits on this environment")
 	}
 
 	return c.GetApp(appIDPtr)
@@ -263,12 +263,12 @@ func (c *Configuration) promoteAppByID(i int) (AppStatusStruct, error) {
 	getReq, err := http.NewRequest("GET", url, nil)
 	getReq.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
 	if err != nil {
-		log.Printf("Error here %v", err)
+		fmt.Printf("Error here %v", err)
 	}
 
 	getResp, err := client.Do(getReq)
 	if err != nil {
-		log.Printf("Error here %v", err)
+		fmt.Printf("Error here %v", err)
 	}
 
 	defer getResp.Body.Close()
@@ -295,7 +295,7 @@ func (c *Configuration) promoteAppByID(i int) (AppStatusStruct, error) {
 	postReq, err := http.NewRequest("POST", urlNew, bytes.NewBuffer(payload))
 	postReq.SetBasicAuth(c.Creditional.User, c.Creditional.Password)
 	if err != nil {
-		log.Printf("Error here %v", err)
+		fmt.Printf("Error here %v", err)
 	}
 
 	postResp, err := client.Do(postReq)
@@ -306,9 +306,8 @@ func (c *Configuration) promoteAppByID(i int) (AppStatusStruct, error) {
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(postResp.Body)
-	fmt.Println(buf.String())
 	if strings.Contains(buf.String(), "exits") {
-		return AppStatusStruct{}, fmt.Errorf("\nthis app already exits on this environment")
+		return AppStatusStruct{}, fmt.Errorf("this app already exits on this environment")
 	}
 
 	return c.GetAppByName(a.AppName, a.Environment)

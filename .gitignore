@@ -4,3 +4,6 @@ server/TestDB.db
 server/server.key
 server/server.pem
 server/appControl
+appControl
+SimpleDB.db
+server.log
