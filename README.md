@@ -1,15 +1,13 @@
-# sample_api_go
+# GOAC(GO Applications Control)
 
-First try to convert https://github.com/3sky/sample-python-api into golang
-
-App contains basic http auth with `3sky:test` hardcoded in app.go, feel free to change it :) 
+App contains basic http auth with `3sky:test` hardcoded in app.go, feel free to change it :)
 
 ## Install
 
-- Fetach deps
+- Fetach deps(I used go modules)
 
   ```bash
-  go get ./...
+  go get
   ```
 
 - Build app
@@ -41,6 +39,21 @@ App contains basic http auth with `3sky:test` hardcoded in app.go, feel free to 
 
 ### CLI base usage
 
+- Client configure `client/.creds`
+
+    ```json
+    {
+    "creditional": {
+        "user": "3sky",
+        "password": "test"
+    },
+    "server": {
+        "ip": "127.0.0.1",
+        "port": 5000
+    }
+    }
+    ```
+
 - Get help
 
     ```bash
@@ -50,6 +63,5 @@ App contains basic http auth with `3sky:test` hardcoded in app.go, feel free to 
 - Sample search
 
     ```bash
-   ./appClient -action=search -app=GO_API -env=dev
+   ./appClient -action search -app GO_API -env dev
     ```
-
