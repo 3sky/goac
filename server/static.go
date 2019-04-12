@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 )
 
 //PageData - Data for table in HTML
@@ -19,19 +18,68 @@ func (pg *PageData) AddItem(item AppStatusStruct) []AppStatusStruct {
 	return pg.OneApp
 }
 
+const htm = `
+<!doctype html>
+<html>
+<body>
+<style>
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+<h1 align="center"> {{.PageTitle}} </h1>
+<table style="width:100%">
+    <tr>
+      <th>ID</th>
+      <th>App Name</th>
+      <th>App Version</th>
+      <th>Environment</th>
+      <th>Branch</th>
+      <th>Node IP</th>
+      <th>Updated Date</th>
+      <th>Updated By</th>
+    </tr>
+    {{range .OneApp}}
+    <tr>
+        <td>{{ .ID }}</td>
+        <td>{{ .AppName }}</td>
+        <td>{{ .AppVersion }}</td>
+        <td>{{ .Environment }}</td>
+        <td>{{ .Branch }}</td>
+        <td>{{ .IP }}</td>
+        <td>{{ .UpdateDate }}</td>
+        <td>{{ .UpdateBy }}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>`
+
 // DisplayHTMLDev - Display HTML
 func (a *App) DisplayHTMLDev(w http.ResponseWriter, r *http.Request) {
 
 	var dev PageData
 
-	dev, path, err := a.preperHTML("dev")
+	dev, err := a.preperHTML("dev")
 
 	if err != nil {
 		log.Printf("cannot get dev aplication from db: %v", err)
 	}
 
-	tmpl := template.Must(template.ParseFiles(path + "/hello.html"))
-
+	tmpl, _ := template.New("dev").Parse(htm)
 	tmpl.Execute(w, dev)
 }
 
@@ -40,17 +88,17 @@ func (a *App) DisplayHTMLStg(w http.ResponseWriter, r *http.Request) {
 
 	var stg PageData
 
-	stg, path, err := a.preperHTML("stg")
+	stg, err := a.preperHTML("stg")
 
 	if err != nil {
 		log.Printf("cannot get stg aplication from db: %v", err)
 	}
 
-	tmpl := template.Must(template.ParseFiles(path + "/hello.html"))
+	tmpl, _ := template.New("stg").Parse(htm)
 	tmpl.Execute(w, stg)
 }
 
-func (a *App) preperHTML(env string) (PageData, string, error) {
+func (a *App) preperHTML(env string) (PageData, error) {
 
 	var tmp AppStatusStruct
 
@@ -76,10 +124,5 @@ func (a *App) preperHTML(env string) (PageData, string, error) {
 
 	}
 
-	p, err := os.Getwd()
-	if err != nil {
-		log.Printf("error while get path: %v", err)
-	}
-
-	return data, p, nil
+	return data, nil
 }
